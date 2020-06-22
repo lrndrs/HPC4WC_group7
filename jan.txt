@@ -1,0 +1,1 @@
+Braucht es für die update_halo function zuerst eine erweiterung des Feldes? Im moment werden daten weggeschnitten.
