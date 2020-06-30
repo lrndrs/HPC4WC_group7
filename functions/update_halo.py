@@ -1,23 +1,28 @@
 def update_halo(dim, field, num_halo ):
-    """Update the halo-zone using an up/down and left/right strategy.
+    """Update the halo-zone.
     
-    field    -- input/output field (nz x ny x nx with halo in x- and y-direction)
+    field    -- input/output 1d: nx, 2d: nx * ny, 3d: nx * ny * nz 
     num_halo -- number of halo points
     
-    Note: corners are updated in the left/right phase of the halo-update
     """
     if dim == 3:
-        # bottom edge (without corners)
+        # bottom edge
         field[:, 0:num_halo, num_halo:-num_halo] = field[:, -2 * num_halo:-num_halo, num_halo:-num_halo]
 
-        # top edge (without corners)
+        # top edge
         field[:, -num_halo:, num_halo:-num_halo] = field[:, num_halo:2 * num_halo, num_halo:-num_halo]
 
-        # left edge (including corners)
+        # left edge
         field[:, :, 0:num_halo] = field[:, :, -2 * num_halo:-num_halo]
 
-        # right edge (including corners)
+        # right edge
         field[:, :, -num_halo:] = field[:, :, num_halo:2 * num_halo]
+        
+        # front edge
+        field[0:num_halo, :, :] = field [-2*num_halo:-num_halo, :, :]
+        
+        #back edge
+        field[-num_halo:, :, :] = field [num_halo:2*num_halo, :, :]
     if dim == 2:
         # bottom edge
         field[:,0:num_halo] = field[:, -2*num_halo:-num_halo]
