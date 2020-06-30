@@ -61,9 +61,6 @@ def main(dim, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_result=False)
     in_field = add_halo_points(dim, in_field, num_halo)
     in_field = update_halo(dim, in_field, num_halo)
     
-    res = exec(f'{stencil_type}({in_field})')
-    print(res)
-    
     # warmup caches
     if stencil_type == "laplacian":
         laplacian( in_field, tmp_field, dim, num_halo=num_halo, extend=0 )
