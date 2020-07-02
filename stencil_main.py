@@ -1,9 +1,8 @@
 # ******************************************************
-#     Program: stencil2d
-#      Author: Oliver Fuhrer
-#       Email: oliverf@vulcan.com
-#        Date: 20.05.2020
-# Description: Simple stencil example
+#     Program: stencil_main.py
+#      Author: HPC4WC Group 7
+#        Date: 02.07.2020
+# Description: Access different stencil functions via Commandline (click)
 # ******************************************************
 
 import time
@@ -13,10 +12,12 @@ import matplotlib
 import sys
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from functions.fieldvalidation import create_new_infield, create_val_infield, save_newoutfield, validate_outfield 
 from functions.stencils import test, laplacian, FMA
 from functions.create_field import get_random_field
 from functions.update_halo import update_halo
 from functions.add_halo_points import add_halo_points
+from functions.remove_halo_points import remove_halo_points
 
 
 
@@ -30,8 +31,9 @@ from functions.add_halo_points import add_halo_points
 @click.option('--stencil_type', type=str, required=True, help='Specify which stencil to use. Options are [test, laplacian, FMA]')
 @click.option('--num_halo', type=int, default=2, help='Number of halo-pointers in x- and y-direction')
 @click.option('--plot_result', type=bool, default=False, help='Make a plot of the result?')
+@click.option('--create_field', type=bool, default=True, help='Create a Field (True) or Validate from saved field? (False)')
 
-def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_result=False):
+def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_result=False, create_field=True):
     """Driver for apply_diffusion that sets up fields and does timings"""
     
     assert 0 < nx <= 1024*1024, 'You have to specify a reasonable value for nx'
@@ -48,7 +50,12 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     dim = 3
     # TODO: create a field to validate results. 
     #create field
-    in_field = get_random_field(dim, nx, ny, nz)
+    if create_field==True:
+        in_field = create_new_infield(nx,ny,nz)
+        
+    if create_field==False:
+        in_field = create_val_infield(nx,ny,nz)
+        
     
     #np.save('in_field', in_field)
     if plot_result:
@@ -92,8 +99,18 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
         toc = time.time()        
     
     print("Elapsed time for work = {} s".format(toc-tic) )
+    
 
-    # TODO delet halo from out_field
+    #delete halo from out_field
+    out_field = remove_halo_points(dim, out_field, num_halo)
+    
+    #Save or validate Outfield
+    if create_field==True:
+        save_newoutfield(out_field)
+        
+    if create_field==False:
+        validate_outfield(out_field)
+        #TODO: Save Elapsed Work Time in table for validation mode
     
     # np.save('out_field', out_field)
     if plot_result:
@@ -101,6 +118,7 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
         plt.colorbar()
         plt.savefig('out_field.png')
         plt.close()
+        #TODO: print in and out field as pdf plot
 
 
 if __name__ == '__main__':
