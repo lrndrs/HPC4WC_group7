@@ -33,10 +33,11 @@ from functions.remove_halo_points import remove_halo_points
 @click.option('--stencil_type', type=str, required=True, help='Specify which stencil to use. Options are [test, laplacian, FMA]')
 @click.option('--num_halo', type=int, default=2, help='Number of halo-pointers in x- and y-direction')
 @click.option('--plot_result', type=bool, default=False, help='Make a plot of the result?')
-@click.option('--create_field', type=bool, default=True, help='Create a Field (True) or Validate from saved field? (False)')
+@click.option('--create_field', type=bool, default=True, help='Create a Field (True) or Validate from saved field (False)')
+@click.option('--create_newreport', type=bool, default=True, help='Create a new report if a new field is generated (True/False)')
 @click.option('--report_name', type=str, default='performance_report.csv', help='Specify a name for the csv performance report')
 
-def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_result=False, create_field=True,report_name='performance_report.csv'):
+def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_result=False, create_field=True,create_newreport=True,report_name='performance_report.csv'):
     """Driver for apply_diffusion that sets up fields and does timings"""
     
     assert 0 < nx <= 1024*1024, 'You have to specify a reasonable value for nx'
@@ -55,7 +56,8 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     #create field
     if create_field==True:
         in_field = create_new_infield(nx,ny,nz)
-        new_reportfile(report_name)
+        if create_newreport:
+            new_reportfile(report_name)
         
     if create_field==False:
         in_field = create_val_infield(nx,ny,nz)
