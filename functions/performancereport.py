@@ -1,14 +1,22 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jul  2 14:53:17 2020
-
-@author: lau
-"""
+# ******************************************************
+# Functions for Performance Report generation
+# ******************************************************
 
 import csv
 
 def new_reportfile(report_name):
+    """
+    Generates a new CSV file and sets the header row of the performance report
+
+    Parameters
+    ----------
+    report_name : Name of File on disk
+
+    Returns
+    -------
+    None.
+
+    """
     with open(report_name,'w') as newFile:
         newFileWriter = csv.writer(newFile)
         newFileWriter.writerow(['stencil type','nx','ny','nz','Elapsed Time','Validation'])
@@ -17,6 +25,24 @@ def new_reportfile(report_name):
         
 
 def append_row(report_name,stencil_type,nx,ny,nz,elapsedtime,valid_var):
+    """
+    Appends a row with several variables to the CSV performance report.
+
+    Parameters
+    ----------
+    report_name : Name of File on disk
+    stencil_type : Stencil Type from stencil list
+    nx : field size in x-Direction.
+    ny : field size in y-Direction.
+    nz : field size in z-Direction.
+    elapsedtime : measured work time
+    valid_var : Boolean if Validation was successful
+
+    Returns
+    -------
+    None.
+
+    """
     with open(report_name, 'a') as newFile:
         newFileWriter = csv.writer(newFile)
         newFileWriter.writerow([stencil_type,nx,ny,nz,elapsedtime,valid_var])
