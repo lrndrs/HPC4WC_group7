@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from functions.fieldvalidation import create_new_infield, create_val_infield, save_newoutfield, validate_outfield
 from functions.performancereport import new_reportfile, append_row
 from functions.stencils import test, laplacian, FMA
+from functions.stencils_numba import test_numba
 #from functions.create_field import get_random_field
 from functions.update_halo import update_halo
 from functions.add_halo_points import add_halo_points
@@ -46,7 +47,7 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     assert 0 < num_iter <= 1024*1024, 'You have to specify a reasonable value for num_iter'
     assert 0 < num_halo <= 256, 'Your have to specify a reasonable number of halo points'
     assert 0 <= dim_stencil <= 3, "Please choose between 0 and 3 dimensions"
-    stencil_type_list = ["test", "laplacian", "FMA"]
+    stencil_type_list = ["test", "laplacian", "FMA","test_numba"]
     if stencil_type not in stencil_type_list:
         print("please make sure you choose one of the following stencil: {}".format(stencil_type_list))
         sys.exit(0)
@@ -85,7 +86,8 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     if stencil_type == "test":
         test(in_field)
         
-        
+    if stencil_type == "test_numba":
+        test_numba(in_field)  
         
     # time the actual work
     # Call the stencil chosen in stencil_type
@@ -102,7 +104,12 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     if stencil_type == "test":
         tic = time.time()
         out_field = test(in_field)
-        toc = time.time()        
+        toc = time.time()   
+        
+    if stencil_type == "test_numba":
+        tic = time.time()
+        out_field = test_numba(in_field)
+        toc = time.time()  
     
     print("Elapsed time for work = {} s".format(toc-tic) )
     elapsedtime = toc-tic
