@@ -22,7 +22,7 @@ from functions.add_halo_points import add_halo_points
 
             
 @click.command()
-@click.option('--dim', type=int, required=True, help='Number of dimensions (1-3)')
+@click.option('--dim_stencil', type=int, required=True, help='Number of dimensions for stencil (1-3)')
 @click.option('--nx', type=int, required=True, help='Number of gridpoints in x-direction')
 @click.option('--ny', type=int, required=True, help='Number of gridpoints in y-direction')
 @click.option('--nz', type=int, required=True, help='Number of gridpoints in z-direction')
@@ -31,7 +31,7 @@ from functions.add_halo_points import add_halo_points
 @click.option('--num_halo', type=int, default=2, help='Number of halo-pointers in x- and y-direction')
 @click.option('--plot_result', type=bool, default=False, help='Make a plot of the result?')
 
-def main(dim, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_result=False):
+def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_result=False):
     """Driver for apply_diffusion that sets up fields and does timings"""
     
     assert 0 < nx <= 1024*1024, 'You have to specify a reasonable value for nx'
@@ -39,12 +39,13 @@ def main(dim, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_result=False)
     assert 0 < nz <= 1024, 'You have to specify a reasonable value for nz'
     assert 0 < num_iter <= 1024*1024, 'You have to specify a reasonable value for num_iter'
     assert 0 < num_halo <= 256, 'Your have to specify a reasonable number of halo points'
-    assert 0 < dim <= 3, "Please choose between 1 and 3 dimensions"
+    assert 0 < dim_stencil <= 3, "Please choose between 1 and 3 dimensions"
     stencil_type_list = ["test", "laplacian", "FMA"]
     if stencil_type not in stencil_type_list:
         print("please make sure you choose one of the following stencil: {}".format(stencil_type_list))
         sys.exit(0)
     alpha = 1./32.
+    dim = 3
     # TODO: create a field to validate results. 
     #create field
     in_field = get_random_field(dim, nx, ny, nz)
@@ -66,21 +67,23 @@ def main(dim, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_result=False)
     
     # warmup caches
     if stencil_type == "laplacian":
-        laplacian( in_field, tmp_field, dim, num_halo=num_halo, extend=0 )
+        laplacian( in_field, tmp_field, dim_stencil, num_halo=num_halo, extend=0 )
         
     if stencil_type == "test":
         test(in_field)
+        
+        
         
     # time the actual work
     # Call the stencil chosen in stencil_type
     if stencil_type == "laplacian":
         tic = time.time()
-        out_field = laplacian( in_field, tmp_field, dim, num_halo=num_halo, extend=0 )
+        out_field = laplacian( in_field, tmp_field, dim_stencil, num_halo=num_halo, extend=0 )
         toc = time.time() 
         
     if stencil_type == "FMA":
         tic = time.time()
-        out_field = FMA( in_field, dim, num_halo=num_halo, extend=0 )
+        out_field = FMA( in_field, dim_stencil, num_halo=num_halo, extend=0 )
         toc = time.time() 
         
     if stencil_type == "test":
