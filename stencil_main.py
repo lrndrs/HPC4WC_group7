@@ -39,7 +39,7 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     assert 0 < nz <= 1024, 'You have to specify a reasonable value for nz'
     assert 0 < num_iter <= 1024*1024, 'You have to specify a reasonable value for num_iter'
     assert 0 < num_halo <= 256, 'Your have to specify a reasonable number of halo points'
-    assert 0 < dim_stencil <= 3, "Please choose between 1 and 3 dimensions"
+    assert 0 <= dim_stencil <= 3, "Please choose between 0 and 3 dimensions"
     stencil_type_list = ["test", "laplacian", "FMA"]
     if stencil_type not in stencil_type_list:
         print("please make sure you choose one of the following stencil: {}".format(stencil_type_list))
@@ -83,7 +83,7 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
         
     if stencil_type == "FMA":
         tic = time.time()
-        out_field = FMA( in_field, dim_stencil, num_halo=num_halo, extend=0 )
+        out_field = FMA( in_field, dim_stencil=0, num_halo=num_halo, extend=0 )
         toc = time.time() 
         
     if stencil_type == "test":

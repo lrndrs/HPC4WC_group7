@@ -14,5 +14,5 @@ https://www.youtube.com/watch?v=x58W9A2lnQc
 ### Run stencil_main.py
 - move to its folder
 - run with:
-python3 stencil_main.py --dim 3 --nx 10 --ny 10 --nz 10 --num_iter 100 --stencil_type test
+python3 stencil_main.py --dim_stencil 3 --nx 10 --ny 10 --nz 10 --num_iter 100 --stencil_type test
   
