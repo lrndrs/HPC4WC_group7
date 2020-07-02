@@ -9,6 +9,7 @@ Created on Thu Jul  2 11:32:04 2020
 import numpy as np
 
 
+
 def create_new_infield(nx,ny,nz):
     
     testfield = np.random.rand(nx,ny,nz)
@@ -33,8 +34,11 @@ def save_newoutfield(out_field):
 def validate_outfield(out_field):
     testfield = np.load('test_outfield.npy')
     
-    fprint= np.all(np.equal(testfield,out_field))
-    print('Result of field validation is:', fprint)
+    valid_var= np.all(np.equal(testfield,out_field))
+    print('Result of field validation is:', valid_var)
+    
+    return valid_var
 
     
-    
+
+   

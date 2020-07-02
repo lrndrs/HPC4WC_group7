@@ -12,9 +12,11 @@ import matplotlib
 import sys
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from functions.fieldvalidation import create_new_infield, create_val_infield, save_newoutfield, validate_outfield 
+
+from functions.fieldvalidation import create_new_infield, create_val_infield, save_newoutfield, validate_outfield
+from functions.performancereport import new_reportfile, append_row
 from functions.stencils import test, laplacian, FMA
-from functions.create_field import get_random_field
+#from functions.create_field import get_random_field
 from functions.update_halo import update_halo
 from functions.add_halo_points import add_halo_points
 from functions.remove_halo_points import remove_halo_points
@@ -32,8 +34,9 @@ from functions.remove_halo_points import remove_halo_points
 @click.option('--num_halo', type=int, default=2, help='Number of halo-pointers in x- and y-direction')
 @click.option('--plot_result', type=bool, default=False, help='Make a plot of the result?')
 @click.option('--create_field', type=bool, default=True, help='Create a Field (True) or Validate from saved field? (False)')
+@click.option('--report_name', type=str, default='performance_report.csv', help='Specify a name for the csv performance report')
 
-def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_result=False, create_field=True):
+def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_result=False, create_field=True,report_name='performance_report.csv'):
     """Driver for apply_diffusion that sets up fields and does timings"""
     
     assert 0 < nx <= 1024*1024, 'You have to specify a reasonable value for nx'
@@ -52,6 +55,7 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     #create field
     if create_field==True:
         in_field = create_new_infield(nx,ny,nz)
+        new_reportfile(report_name)
         
     if create_field==False:
         in_field = create_val_infield(nx,ny,nz)
@@ -99,6 +103,7 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
         toc = time.time()        
     
     print("Elapsed time for work = {} s".format(toc-tic) )
+    elapsedtime = toc-tic
     
 
     #delete halo from out_field
@@ -107,18 +112,23 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     #Save or validate Outfield
     if create_field==True:
         save_newoutfield(out_field)
+        valid_var = '-'
         
     if create_field==False:
-        validate_outfield(out_field)
+        valid_var = validate_outfield(out_field)
         #TODO: Save Elapsed Work Time in table for validation mode
     
-    # np.save('out_field', out_field)
+    # Append row with calculated work to report
+    append_row(report_name,stencil_type,nx,ny,nz,elapsedtime,valid_var)
+    
     if plot_result:
         plt.imshow(out_field[out_field.shape[0] // 2, :, :], origin='lower')
         plt.colorbar()
         plt.savefig('out_field.png')
         plt.close()
         #TODO: print in and out field as pdf plot
+        
+    
 
 
 if __name__ == '__main__':
