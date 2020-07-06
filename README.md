@@ -16,6 +16,10 @@ https://www.youtube.com/watch?v=x58W9A2lnQc
 - run with:
 python3 stencil_main.py --dim_stencil 3 --nx 10 --ny 10 --nz 10 --num_iter 100 --stencil_type test
 
+For help about available options type: 
+python3 stencil_main.py --help
+
+
 
 ### Validation and performance report options
 - Set the option create_field = True (Default) to create a new random field that is saved as a .npy file.
@@ -24,5 +28,13 @@ python3 stencil_main.py --dim_stencil 3 --nx 10 --ny 10 --nz 10 --num_iter 100 -
 - Further validation runs are added as a row to the already generated performance report.
 - If the field shapes of the original and the control file are not equal, the program stops. To generate however a report with stencils of different field sizes and no validation set the option create_newreport to False. 
 
+Example for validation:
+python3 stencil_main.py --dim_stencil 1  --nx 10 --ny 10 --nz 10 --num_iter 100 --stencil_type laplacian_numbaloop --create_field False
 
+
+
+### Next To Do's:
+* Report: add also dimension of stencil to table
+* Upscale laplacian_numbaloop to 3D (Now only 1D)
+* implement laplap
   
