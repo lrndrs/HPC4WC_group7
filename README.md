@@ -34,7 +34,13 @@ python3 stencil_main.py --dim_stencil 1  --nx 10 --ny 10 --nz 10 --num_iter 100 
 
 
 ### Next To Do's:
-* Report: add also dimension of stencil to table
 * Upscale laplacian_numbaloop to 3D (Now only 1D)
 * implement laplap
+
+
+### Fragezeichen
+*Clarify in which direction are we calculating the 1D, 2D, 3D laplacian (which dim is the first dim)
+*Do we need the backup if the halos have the size 1 that the last value is not used for calculation? (yes for laplap?)
+then: how to implement this in numba?
+
   

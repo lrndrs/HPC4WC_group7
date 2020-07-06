@@ -83,12 +83,13 @@ def laplacian_numbaloop( in_field, lap_field, dim_stencil, num_halo=1, extend=0 
     assert 0 < dim_stencil <= 3, "The laplacian is not defined for pointwise stencils. Please choose between 1 to 3 dimensions."
     
     lap_field =np.empty_like(in_field)
+    I, J, K = in_field.shape
     
     if dim_stencil == 1:
-        ib = np.int64(num_halo - extend)
-        ie = np.int64(- num_halo + extend)
+        kb = np.int64(num_halo - extend)
+        ke = np.int64(- num_halo + extend)
         
-        I, J, K = in_field.shape
+        
         
         #lap_field[ib:ie] = - 2. * in_field[ib:ie]  \
         #    + in_field[ib - 1:ie - 1] + in_field[ib + 1:ie + 1 if ie != -1 else None]
@@ -98,7 +99,7 @@ def laplacian_numbaloop( in_field, lap_field, dim_stencil, num_halo=1, extend=0 
         for i in range(I):
             for j in range(J):
             #    lap_field[i,j,0]=-2 * in_field[i,j,0]
-                for k in range(ib,K+ie):
+                for k in range(kb,K+ke):
                     lap_field[i,j,k]= - 2. * in_field[i, j, k]  \
                           + in_field[i, j, k - 1] + in_field[i, j, k + 1] #+ in_field[i, j, k + 1 if ie != -1 else None] 
                 
@@ -107,17 +108,26 @@ def laplacian_numbaloop( in_field, lap_field, dim_stencil, num_halo=1, extend=0 
         return lap_field
       
     if dim_stencil == 2:
-        ib = num_halo - extend
-        ie = - num_halo + extend
-        jb = num_halo - extend
-        je = - num_halo + extend
+        kb = np.int64(num_halo - extend)
+        ke = np.int64(- num_halo + extend)
+        jb = np.int64(num_halo - extend)
+        je = np.int64(- num_halo + extend)
         
         #lap_field[jb:je, ib:ie] = - 4. * in_field[jb:je, ib:ie]  \
         #    + in_field[jb:je, ib - 1:ie - 1] + in_field[jb:je, ib + 1:ie + 1 if ie != -1 else None]  \
         #    + in_field[jb - 1:je - 1, ib:ie] + in_field[jb + 1:je + 1 if je != -1 else None, ib:ie]
-        lap_field[:, jb:je, ib:ie] = - 4. * in_field[:, jb:je, ib:ie]  \
-            + in_field[:, jb:je, ib - 1:ie - 1] + in_field[:, jb:je, ib + 1:ie + 1]  \
-            + in_field[:, jb - 1:je - 1, ib:ie] + in_field[:, jb + 1:je + 1, ib:ie]
+        # lap_field[:, jb:je, ib:ie] = - 4. * in_field[:, jb:je, ib:ie]  \
+        #     + in_field[:, jb:je, ib - 1:ie - 1] + in_field[:, jb:je, ib + 1:ie + 1]  \
+        #     + in_field[:, jb - 1:je - 1, ib:ie] + in_field[:, jb + 1:je + 1, ib:ie]
+            
+            
+        for i in range(I):
+            for j in range(jb,J+je):    
+                for k in range(kb,K+ke):
+                    lap_field[i,j,k]= - 4. * in_field[i, j, k]  \
+                          + in_field[i, j, k - 1] + in_field[i, j, k + 1] \
+                              +in_field[i,j-1,k] + in_field[i,j+1,k] #+ in_field[i, j, k + 1 if ie != -1 else None] 
+                
         
         return lap_field
 
@@ -129,11 +139,19 @@ def laplacian_numbaloop( in_field, lap_field, dim_stencil, num_halo=1, extend=0 
         kb = num_halo - extend
         ke = - num_halo + extend
 
-        lap_field[kb:ke, jb:je, ib:ie] = - 6. * in_field[kb:ke, jb:je, ib:ie]  \
-            + in_field[kb:ke, jb:je, ib - 1:ie - 1] + in_field[kb:ke, jb:je, ib + 1:ie + 1 if ie != -1 else None]  \
-            + in_field[kb:ke, jb - 1:je - 1, ib:ie] + in_field[kb:ke, jb + 1:je + 1 if je != -1 else None, ib:ie]  \
-            + in_field[kb - 1:ke - 1, jb:je, ib:ie] + in_field[kb + 1:ke  + 1 if ke != -1 else None, jb:je , ib:ie]
+        # lap_field[kb:ke, jb:je, ib:ie] = - 6. * in_field[kb:ke, jb:je, ib:ie]  \
+        #     + in_field[kb:ke, jb:je, ib - 1:ie - 1] + in_field[kb:ke, jb:je, ib + 1:ie + 1 if ie != -1 else None]  \
+        #     + in_field[kb:ke, jb - 1:je - 1, ib:ie] + in_field[kb:ke, jb + 1:je + 1 if je != -1 else None, ib:ie]  \
+        #     + in_field[kb - 1:ke - 1, jb:je, ib:ie] + in_field[kb + 1:ke  + 1 if ke != -1 else None, jb:je , ib:ie]
 
+        for i in range(ib,I+ie):
+            for j in range(jb,J+je):    
+                for k in range(kb,K+ke):
+                    lap_field[i,j,k]= - 6. * in_field[i, j, k]  \
+                          + in_field[i, j, k - 1] + in_field[i, j, k + 1] \
+                          + in_field[i,j-1,k] + in_field[i,j+1,k] \
+                              + in_field[i-1,j,k] + in_field[i+1,j,k]
+                        
         return lap_field    
   
     
