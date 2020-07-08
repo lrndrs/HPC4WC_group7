@@ -57,15 +57,15 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     dim = 3
     
     #Set field constraints according to dim_stencil
-    if dim_stencil ==1:
-        if nx!=1 or ny!=1:
-          print('WARNING: Dimension is set to 1D, only nz value is considered.')  
-        nx,ny=1
+    # if dim_stencil ==1:
+    #     if nx!=1 or ny!=1:
+    #       print('WARNING: Dimension is set to 1D, only nz value is considered.')  
+    #     nx,ny=1
     
-    if dim_stencil ==2:
-        if nx!=1:
-          print('WARNING: Dimension is set to 2D, only nz and ny values are considered.')  
-        nx=1    
+    # if dim_stencil ==2:
+    #     if nx!=1:
+    #       print('WARNING: Dimension is set to 2D, only nz and ny values are considered.')  
+    #     nx=1    
     
     #create field for validation
     if create_field==True:

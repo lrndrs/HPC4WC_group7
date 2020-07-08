@@ -1,3 +1,9 @@
+# ******************************************************
+#      Script: Numba Stencils
+#      Author: HPC4WC Group 7
+#        Date: 02.07.2020
+# ******************************************************
+
 import numpy as np
 from numba import jit,njit,vectorize,stencil,stencils
 
@@ -96,12 +102,12 @@ def laplacian_numbaloop( in_field, lap_field, dim_stencil, num_halo=1, extend=0 
         #lap_field[:, :, ib:ie] = - 2. * in_field[:, :, ib:ie]  \
          #   + in_field[:, :, ib - 1:ie - 1] + in_field[:, :, ib + 1:ie + 1 if ie != -1 else None] 
         
-        for i in range(I):
-            for j in range(J):
+        #for i in range(I):
+            #for j in range(J):
             #    lap_field[i,j,0]=-2 * in_field[i,j,0]
-                for k in range(kb,K+ke):
-                    lap_field[i,j,k]= - 2. * in_field[i, j, k]  \
-                          + in_field[i, j, k - 1] + in_field[i, j, k + 1] #+ in_field[i, j, k + 1 if ie != -1 else None] 
+        for k in range(kb,K+ke):
+            lap_field[:,:,k]= - 2. * in_field[:, :, k]  \
+                + in_field[:, :, k - 1] + in_field[:, :, k + 1] #+ in_field[i, j, k + 1 if ie != -1 else None] 
                 
                
         
@@ -121,12 +127,12 @@ def laplacian_numbaloop( in_field, lap_field, dim_stencil, num_halo=1, extend=0 
         #     + in_field[:, jb - 1:je - 1, ib:ie] + in_field[:, jb + 1:je + 1, ib:ie]
             
             
-        for i in range(I):
-            for j in range(jb,J+je):    
-                for k in range(kb,K+ke):
-                    lap_field[i,j,k]= - 4. * in_field[i, j, k]  \
-                          + in_field[i, j, k - 1] + in_field[i, j, k + 1] \
-                              +in_field[i,j-1,k] + in_field[i,j+1,k] #+ in_field[i, j, k + 1 if ie != -1 else None] 
+        #for i in range(I):
+        for j in range(jb,J+je):    
+            for k in range(kb,K+ke):
+                    lap_field[:,j,k]= - 4. * in_field[:, j, k]  \
+                          + in_field[:, j, k - 1] + in_field[:, j, k + 1] \
+                              +in_field[:,j-1,k] + in_field[:,j+1,k] #+ in_field[i, j, k + 1 if ie != -1 else None] 
                 
         
         return lap_field
