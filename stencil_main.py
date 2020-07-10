@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 from functions.fieldvalidation import create_new_infield, create_val_infield, save_newoutfield, validate_outfield
 from functions.performancereport import new_reportfile, append_row
-from functions.stencils import test, laplacian, FMA
+from functions.stencils import test, laplacian1d, laplacian2d, laplacian3d, FMA
 from functions.stencils_numba import test_numba, laplacian_numba, laplacian_numbaloop, FMA_numba
 #from functions.create_field import get_random_field
 from functions.update_halo import update_halo
@@ -33,7 +33,7 @@ from numba import jit
 @click.option('--ny', type=int, required=True, help='Number of gridpoints in y-direction')
 @click.option('--nz', type=int, required=True, help='Number of gridpoints in z-direction')
 @click.option('--num_iter', type=int, required=True, help='Number of iterations')
-@click.option('--stencil_type', type=str, required=True, help='Specify which stencil to use. Options are ["test", "laplacian", "FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba"]')
+@click.option('--stencil_type', type=str, required=True, help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba"]')
 @click.option('--num_halo', type=int, default=2, help='Number of halo-pointers in x- and y-direction')
 @click.option('--plot_result', type=bool, default=False, help='Make a plot of the result?')
 @click.option('--create_field', type=bool, default=True, help='Create a Field (True) or Validate from saved field (False)')
@@ -49,7 +49,7 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     assert 0 < num_iter <= 1024*1024, 'You have to specify a reasonable value for num_iter'
     assert 0 < num_halo <= 256, 'Your have to specify a reasonable number of halo points'
     assert 0 <= dim_stencil <= 3, "Please choose between 0 and 3 dimensions"
-    stencil_type_list = ["test", "laplacian", "FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba"]
+    stencil_type_list = ["test", "laplacian1d", "laplacian2d","laplacian3d", "FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba"]
     if stencil_type not in stencil_type_list:
         print("please make sure you choose one of the following stencil: {}".format(stencil_type_list))
         sys.exit(0)
@@ -90,11 +90,19 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     in_field = update_halo(dim, in_field, num_halo)
     
     #create additional fields
+    in_field2 = np.ones_like(in_field)
+    in_field3 = np.ones_like(in_field)*4.2
     tmp_field = np.empty_like(in_field)
     
     # warmup caches
-    if stencil_type == "laplacian":
-        laplacian( in_field, tmp_field, dim_stencil, num_halo=num_halo, extend=0 )
+    if stencil_type == "laplacian1d":
+        laplacian1d(in_field, tmp_field, num_halo=num_halo, extend=0)
+    
+    if stencil_type == "laplacian2d":
+        laplacian2d(in_field, tmp_field, num_halo=num_halo, extend=0)
+        
+    if stencil_type == "laplacian3d":
+        laplacian3d(in_field, tmp_field, num_halo=num_halo, extend=0)
         
     if stencil_type == "laplacian_numba":
         laplacian_numba( in_field, tmp_field, dim_stencil, num_halo=num_halo, extend=0 )
@@ -103,11 +111,14 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
         laplacian_numbaloop( in_field, tmp_field, dim_stencil, num_halo=num_halo, extend=0 )
         
     if stencil_type == "test":
-        test(in_field)
+        test(in_field, tmp_field)
         
     if stencil_type == "test_numba":
         test_numba(in_field)  
-        
+    
+    if stencil_type == "FMA":
+        FMA( in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0 )
+          
     if stencil_type == "FMA_numba":
         FMA_numba( in_field, dim_stencil=0, num_halo=num_halo, extend=0 )
         
@@ -115,10 +126,20 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
         
     # time the actual work
     # Call the stencil chosen in stencil_type
-    if stencil_type == "laplacian":
+    if stencil_type == "laplacian1d":
         tic = time.time()
-        out_field = laplacian( in_field, tmp_field, dim_stencil, num_halo=num_halo, extend=0 )
-        toc = time.time() 
+        out_field = laplacian1d(in_field, tmp_field, num_halo=num_halo, extend=0)
+        toc = time.time()
+        
+    if stencil_type == "laplacian2d":
+        tic = time.time()
+        out_field = laplacian2d(in_field, tmp_field, num_halo=num_halo, extend=0)
+        toc = time.time()
+        
+    if stencil_type == "laplacian3d":
+        tic = time.time()
+        out_field = laplacian3d(in_field, tmp_field, num_halo=num_halo, extend=0)
+        toc = time.time()
     
     if stencil_type == "laplacian_numba":
         tic = time.time() 
@@ -132,7 +153,7 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
         
     if stencil_type == "FMA":
         tic = time.time()
-        out_field = FMA( in_field, dim_stencil=0, num_halo=num_halo, extend=0 )
+        out_field = FMA( in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0 )
         toc = time.time() 
         
     if stencil_type == "FMA_numba":
@@ -142,7 +163,7 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
         
     if stencil_type == "test":
         tic = time.time()
-        out_field = test(in_field)
+        out_field = test(in_field, tmp_field)
         toc = time.time()   
         
     if stencil_type == "test_numba":
