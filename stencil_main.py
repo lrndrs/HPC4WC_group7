@@ -14,8 +14,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
-from functions.fieldvalidation import create_new_infield, create_val_infield, save_newoutfield, validate_outfield
-from functions.performancereport import new_reportfile, append_row
+from functions.field_validation import create_new_infield, create_val_infield, save_newoutfield, validate_outfield
+from functions.performance_report import new_reportfile, append_row
 from functions.stencils import test, laplacian1d, laplacian2d, laplacian3d, FMA
 from functions.stencils_numba import test_numba, laplacian_numba, laplacian_numbaloop, FMA_numba
 #from functions.create_field import get_random_field

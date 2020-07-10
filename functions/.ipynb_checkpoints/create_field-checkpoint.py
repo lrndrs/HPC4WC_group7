@@ -6,6 +6,9 @@ def get_random_field(dim, nx=1, ny=1, nz=1):
     #nx number of elements in x direction
     #ny number of elements in y direction
     #nz number of elements in z direction
+    
+    assert 0 < dim <= 3, 'You have to choose one of the following Dimension (dim) [1,2,3].'
+
     if dim == 1:
         print("dim = {}; nx = {}".format(dim, nx))
         return np.random.rand(nx)

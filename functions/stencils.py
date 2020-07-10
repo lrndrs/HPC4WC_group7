@@ -1,7 +1,7 @@
 import numpy as np
 from functions.create_field import get_random_field
-from functions.update_halo import update_halo
-from functions.add_halo_points import add_halo_points
+from functions.halo_functions import update_halo, add_halo_points
+
 
 
 def test(in_field, tmp_field):
