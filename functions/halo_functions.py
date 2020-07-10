@@ -1,6 +1,13 @@
-def add_halo_points(dim, field, num_halo):
+def add_halo_points(field, num_halo):
+    """Add the halo-zone.
+    
+    field    -- input/output 1d: nx, 2d: nx * ny, 3d: nx * ny * nz 
+    num_halo -- number of halo points
+    
+    """
     import numpy as np
     """Adds a halo points to an array on each end (call only once before timeloop)"""
+    dim = field.ndim
     if dim == 1:
         nan = np.array( num_halo*[np.nan] )    
         return np.concatenate( (nan, field, nan) )
@@ -35,13 +42,14 @@ def add_halo_points(dim, field, num_halo):
         
         return field
     
-def update_halo(dim, field, num_halo ):
+def update_halo(field, num_halo ):
     """Update the halo-zone.
     
     field    -- input/output 1d: nx, 2d: nx * ny, 3d: nx * ny * nz 
     num_halo -- number of halo points
     
     """
+    dim = field.ndim
     if dim == 3:
         # bottom edge
         field[:, 0:num_halo, num_halo:-num_halo] = field[:, -2 * num_halo:-num_halo, num_halo:-num_halo]
@@ -77,9 +85,9 @@ def update_halo(dim, field, num_halo ):
         field[-num_halo:] = field[num_halo:2*num_halo]
     return field
 
-def remove_halo_points(dim, field, num_halo):
+def remove_halo_points(field, num_halo):
     """Removes halo points to an array on each end (call only once after timeloop before save)"""
-    
+    dim = field.ndim
     if dim == 1:
         out_field = field[num_halo:-num_halo] 
     

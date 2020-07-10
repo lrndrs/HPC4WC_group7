@@ -87,8 +87,8 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
         plt.close()
         
     # expand in_field to contain halo points
-    in_field = add_halo_points(dim, in_field, num_halo)
-    in_field = update_halo(dim, in_field, num_halo)
+    in_field = add_halo_points(in_field, num_halo)
+    in_field = update_halo(in_field, num_halo)
     
     #create additional fields
     in_field2 = np.ones_like(in_field)
@@ -177,7 +177,7 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     
 
     #delete halo from out_field
-    out_field = remove_halo_points(dim, out_field, num_halo)
+    out_field = remove_halo_points(out_field, num_halo)
     
     #Save or validate Outfield
     if create_field==True:
