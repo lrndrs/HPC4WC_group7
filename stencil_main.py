@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from functions.field_validation import create_new_infield, create_val_infield, save_newoutfield, validate_outfield
 from functions.performance_report import new_reportfile, append_row
 from functions.stencils import test, laplacian1d, laplacian2d, laplacian3d, FMA
-from functions.stencils_numba import test_numba, laplacian_numba, laplacian_numbaloop, FMA_numba, laplacian1d_numbastencil,laplacian2d_numbastencil, laplacian3d_numbastencil, laplacian1d_numbastencil_help, laplacian2d_numbastencil_help, laplacian3d_numbastencil_help
+from functions.stencils_numba import test_numba, laplacian_numba, laplacian_numbaloop, FMA_numba, laplacian1d_numbastencil,laplacian2d_numbastencil, laplacian3d_numbastencil, laplacian1d_numbastencil_help, laplacian2d_numbastencil_help, laplacian3d_numbastencil_help, FMA_numbavectorize#, laplacian1d_numbavectorize
 #from functions.create_field import get_random_field
 #from functions.update_halo import update_halo
 #from functions.add_halo_points import add_halo_points
@@ -34,7 +34,7 @@ from numba import jit
 @click.option('--ny', type=int, required=True, help='Number of gridpoints in y-direction')
 @click.option('--nz', type=int, required=True, help='Number of gridpoints in z-direction')
 @click.option('--num_iter', type=int, required=True, help='Number of iterations')
-@click.option('--stencil_type', type=str, required=True, help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba", "laplacian1d_numbastencil","laplacian2d_numbastencil", "laplacian3d_numbastencil"]')
+@click.option('--stencil_type', type=str, required=True, help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba", "laplacian1d_numbastencil","laplacian2d_numbastencil", "laplacian3d_numbastencil", "FMA_numbavectorize"]')
 @click.option('--num_halo', type=int, default=2, help='Number of halo-pointers in x- and y-direction')
 @click.option('--plot_result', type=bool, default=False, help='Make a plot of the result?')
 @click.option('--create_field', type=bool, default=True, help='Create a Field (True) or Validate from saved field (False)')
@@ -50,7 +50,7 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     assert 0 < num_iter <= 1024*1024, 'You have to specify a reasonable value for num_iter'
     assert 0 < num_halo <= 256, 'Your have to specify a reasonable number of halo points'
     assert 0 <= dim_stencil <= 3, "Please choose between 0 and 3 dimensions"
-    stencil_type_list = ["test", "laplacian1d", "laplacian2d","laplacian3d", "FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba", "laplacian1d_numbastencil", "laplacian2d_numbastencil", "laplacian3d_numbastencil"]
+    stencil_type_list = ["test", "laplacian1d", "laplacian2d","laplacian3d", "FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba", "laplacian1d_numbastencil", "laplacian2d_numbastencil", "laplacian3d_numbastencil", "FMA_numbavectorize"]
     if stencil_type not in stencil_type_list:
         print("please make sure you choose one of the following stencil: {}".format(stencil_type_list))
         sys.exit(0)
@@ -132,6 +132,11 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
     if stencil_type == "laplacian3d_numbastencil":
         laplacian3d_numbastencil(in_field)
         
+    if stencil_type == "FMA_numbavectorize":
+        FMA_numbavectorize( in_field, in_field2, in_field3)
+        
+    #if stencil_type == "laplacian1d_numbavectorize":
+    #    laplacian1d_numbavectorize( in_field)    
         
     # time the actual work
     # Call the stencil chosen in stencil_type
@@ -194,6 +199,16 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
         tic = time.time()
         out_field = laplacian3d_numbastencil( in_field)
         toc = time.time() 
+        
+    if stencil_type == "FMA_numbavectorize":
+        tic = time.time()
+        out_field = FMA_numbavectorize( in_field, in_field2, in_field3)
+        toc = time.time() 
+        
+    #if stencil_type == "laplacian1d_numbavectorize":
+    #    tic = time.time()
+    #    laplacian1d_numbavectorize( in_field)
+    #    toc = time.time() 
     
     print("Elapsed time for work = {} s".format(toc-tic) )
     elapsedtime = toc-tic
