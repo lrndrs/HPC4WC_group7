@@ -19,9 +19,10 @@ from functions.performancereport import new_reportfile, append_row
 from functions.stencils import test, laplacian1d, laplacian2d, laplacian3d, FMA
 from functions.stencils_numba import test_numba, laplacian_numba, laplacian_numbaloop, FMA_numba
 #from functions.create_field import get_random_field
-from functions.update_halo import update_halo
-from functions.add_halo_points import add_halo_points
-from functions.remove_halo_points import remove_halo_points
+#from functions.update_halo import update_halo
+#from functions.add_halo_points import add_halo_points
+#from functions.remove_halo_points import remove_halo_points
+from functions.halo_functions import update_halo, add_halo_points, remove_halo_points 
 from numba import jit
 
 
