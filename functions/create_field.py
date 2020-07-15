@@ -2,10 +2,21 @@ import numpy as np
 
 
 def get_random_field(dim, nx=1, ny=1, nz=1):
-    #number of dimensions (1-3)
-    #nx number of elements in x direction
-    #ny number of elements in y direction
-    #nz number of elements in z direction
+    """
+    Creates a field of specified size populated with random samples from a uniform distribution over [0, 1).
+    
+    Parameters
+    ----------
+    dim : number of dimensions (1-3)
+    nx  : number of elements in x direction
+    ny  : number of elements in y direction
+    nz  : number of elements in z direction
+    
+    Returns
+    -------
+    a field of specified size populated with random samples from a uniform distribution over [0, 1).
+    
+    """
     
     assert 0 < dim <= 3, 'You have to choose one of the following Dimension (dim) [1,2,3].'
 

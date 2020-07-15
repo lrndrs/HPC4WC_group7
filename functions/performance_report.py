@@ -30,9 +30,9 @@ def append_row(report_name,stencil_type,dim_stencil,nx,ny,nz,elapsedtime,valid_v
 
     Parameters
     ----------
-    report_name : Name of File on disk
+    report_name  : Name of File on disk
     stencil_type : Stencil Type from stencil list
-    dim_stencil : stencil dimension
+    dim_stencil  : stencil dimension
     nx : field size in x-Direction.
     ny : field size in y-Direction.
     nz : field size in z-Direction.
