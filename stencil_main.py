@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 from functions.field_validation import create_new_infield, create_val_infield, save_newoutfield, validate_outfield
 from functions.performance_report import new_reportfile, append_row
-from functions.stencils import test, laplacian1d, laplacian2d, laplacian3d, FMA
+from functions.stencils_numpy import test, laplacian1d, laplacian2d, laplacian3d, FMA
 from functions.stencils_numba import test_numba, laplacian_numba, laplacian_numbaloop, FMA_numba, laplacian1d_numbastencil,laplacian2d_numbastencil, laplacian3d_numbastencil, laplacian1d_numbastencil_help, laplacian2d_numbastencil_help, laplacian3d_numbastencil_help, FMA_numbavectorize#, laplacian1d_numbavectorize
 #from functions.create_field import get_random_field
 #from functions.update_halo import update_halo
