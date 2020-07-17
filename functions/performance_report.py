@@ -4,6 +4,7 @@
 
 import csv
 
+
 def new_reportfile(report_name):
     """
     Generates a new CSV file and sets the header row of the performance report
@@ -17,14 +18,18 @@ def new_reportfile(report_name):
     None.
 
     """
-    with open(report_name,'w') as newFile:
+    with open(report_name, "w") as newFile:
         newFileWriter = csv.writer(newFile)
-        newFileWriter.writerow(['stencil type','dim','nx','ny','nz','Elapsed Time','Validation'])
-    
-    print('New report {} generated.'.format(report_name))
-        
+        newFileWriter.writerow(
+            ["stencil type", "dim", "nx", "ny", "nz", "Elapsed Time", "Validation"]
+        )
 
-def append_row(report_name,stencil_type,dim_stencil,nx,ny,nz,elapsedtime,valid_var):
+    print("New report {} generated.".format(report_name))
+
+
+def append_row(
+    report_name, stencil_type, dim_stencil, nx, ny, nz, elapsedtime, valid_var
+):
     """
     Appends a row with several variables to the CSV performance report.
 
@@ -44,7 +49,8 @@ def append_row(report_name,stencil_type,dim_stencil,nx,ny,nz,elapsedtime,valid_v
     None.
 
     """
-    with open(report_name, 'a') as newFile:
+    with open(report_name, "a") as newFile:
         newFileWriter = csv.writer(newFile)
-        newFileWriter.writerow([stencil_type,dim_stencil,nx,ny,nz,elapsedtime,valid_var])
-    
+        newFileWriter.writerow(
+            [stencil_type, dim_stencil, nx, ny, nz, elapsedtime, valid_var]
+        )

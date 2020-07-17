@@ -46,12 +46,13 @@ from functions.stencils_numba import (
     FMA_numbavectorize,
 )  # , laplacian1d_numbavectorize
 
+from functions.halo_functions import update_halo, add_halo_points, remove_halo_points
+from numba import jit
+
 # from functions.create_field import get_random_field
 # from functions.update_halo import update_halo
 # from functions.add_halo_points import add_halo_points
 # from functions.remove_halo_points import remove_halo_points
-from functions.halo_functions import update_halo, add_halo_points, remove_halo_points
-from numba import jit
 
 
 @click.command()
