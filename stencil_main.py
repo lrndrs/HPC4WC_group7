@@ -69,7 +69,7 @@ from numba import jit
     "--num_iter", type=int, required=False, default=1, help="Number of iterations"
 )
 @click.option(
-    "--stencil_type",
+    "--stencil_name",
     type=str,
     required=True,
     help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba", "laplacian1d_numbastencil","laplacian2d_numbastencil", "laplacian3d_numbastencil", "FMA_numbavectorize", "lapoflap1d", "lapoflap2d", "lapoflap3d"]',
@@ -106,7 +106,7 @@ def main(
     ny,
     nz,
     num_iter,
-    stencil_type,
+    stencil_name,
     num_halo=2,
     plot_result=False,
     create_field=True,
@@ -124,7 +124,7 @@ def main(
     assert (
         0 < num_halo <= 256
     ), "Your have to specify a reasonable number of halo points"
-    stencil_type_list = [
+    stencil_name_list = [
         "test",
         "laplacian1d",
         "laplacian2d",
@@ -142,10 +142,10 @@ def main(
         "lapoflap2d",
         "lapoflap3d",
     ]
-    if stencil_type not in stencil_type_list:
+    if stencil_name not in stencil_name_list:
         print(
             "please make sure you choose one of the following stencil: {}".format(
-                stencil_type_list
+                stencil_name_list
             )
         )
         sys.exit(0)
@@ -190,151 +190,151 @@ def main(
     tmp_field = np.empty_like(in_field)
 
     # warmup caches
-    if stencil_type == "laplacian1d":
+    if stencil_name == "laplacian1d":
         laplacian1d(in_field, tmp_field, num_halo=num_halo, extend=0)
 
-    if stencil_type == "laplacian2d":
+    if stencil_name == "laplacian2d":
         laplacian2d(in_field, tmp_field, num_halo=num_halo, extend=0)
 
-    if stencil_type == "laplacian3d":
+    if stencil_name == "laplacian3d":
         laplacian3d(in_field, tmp_field, num_halo=num_halo, extend=0)
 
-    if stencil_type == "laplacian_numba":
+    if stencil_name == "laplacian_numba":
         laplacian_numba(in_field, tmp_field, dim, num_halo=num_halo, extend=0)
 
-    if stencil_type == "laplacian_numbaloop":
+    if stencil_name == "laplacian_numbaloop":
         laplacian_numbaloop(
             in_field, tmp_field, dim, num_halo=num_halo, extend=0
         )
 
-    if stencil_type == "test":
-        test(in_field, tmp_field)
+    if stencil_name == "test":
+        test(in_field)
 
-    if stencil_type == "test_numba":
+    if stencil_name == "test_numba":
         test_numba(in_field)
 
-    if stencil_type == "FMA":
+    if stencil_name == "FMA":
         FMA(in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)
 
-    if stencil_type == "FMA_numba":
+    if stencil_name == "FMA_numba":
         FMA_numba(in_field, dim=0, num_halo=num_halo, extend=0)
 
-    if stencil_type == "laplacian1d_numbastencil":
+    if stencil_name == "laplacian1d_numbastencil":
         laplacian1d_numbastencil(in_field)
 
-    if stencil_type == "laplacian2d_numbastencil":
+    if stencil_name == "laplacian2d_numbastencil":
         laplacian2d_numbastencil(in_field)
 
-    if stencil_type == "laplacian3d_numbastencil":
+    if stencil_name == "laplacian3d_numbastencil":
         laplacian3d_numbastencil(in_field)
 
-    if stencil_type == "FMA_numbavectorize":
+    if stencil_name == "FMA_numbavectorize":
         FMA_numbavectorize(in_field, in_field2, in_field3)
 
-    if stencil_type == "lapoflap1d":
+    if stencil_name == "lapoflap1d":
         lapoflap1d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
 
-    if stencil_type == "lapoflap2d":
+    if stencil_name == "lapoflap2d":
         lapoflap2d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
 
-    if stencil_type == "lapoflap3d":
+    if stencil_name == "lapoflap3d":
         lapoflap3d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
 
-    # if stencil_type == "laplacian1d_numbavectorize":
+    # if stencil_name == "laplacian1d_numbavectorize":
     #    laplacian1d_numbavectorize( in_field)
 
     # time the actual work
-    # Call the stencil chosen in stencil_type
+    # Call the stencil chosen in stencil_name
     time_list = []
     for i in range(num_iter):
-        if stencil_type == "laplacian1d":
+        if stencil_name == "laplacian1d":
             tic = time.time()
             out_field = laplacian1d(in_field, tmp_field, num_halo=num_halo, extend=0)
             toc = time.time()
 
-        if stencil_type == "laplacian2d":
+        if stencil_name == "laplacian2d":
             tic = time.time()
             out_field = laplacian2d(in_field, tmp_field, num_halo=num_halo, extend=0)
             toc = time.time()
 
-        if stencil_type == "laplacian3d":
+        if stencil_name == "laplacian3d":
             tic = time.time()
             out_field = laplacian3d(in_field, tmp_field, num_halo=num_halo, extend=0)
             toc = time.time()
 
-        if stencil_type == "laplacian_numba":
+        if stencil_name == "laplacian_numba":
             tic = time.time()
             out_field = laplacian_numba(
                 in_field, tmp_field, dim, num_halo=num_halo, extend=0
             )
             toc = time.time()
 
-        if stencil_type == "laplacian_numbaloop":
+        if stencil_name == "laplacian_numbaloop":
             tic = time.time()
             out_field = laplacian_numbaloop(
                 in_field, tmp_field, dim, num_halo=num_halo, extend=0
             )
             toc = time.time()
 
-        if stencil_type == "FMA":
+        if stencil_name == "FMA":
             tic = time.time()
             out_field = FMA(
                 in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0
             )
             toc = time.time()
 
-        if stencil_type == "FMA_numba":
+        if stencil_name == "FMA_numba":
             tic = time.time()
             out_field = FMA_numba(in_field, dim=0, num_halo=num_halo, extend=0)
             toc = time.time()
 
-        if stencil_type == "test":
+        if stencil_name == "test":
             tic = time.time()
-            out_field = test(in_field, tmp_field)
+            out_field = test(in_field)
             toc = time.time()
 
-        if stencil_type == "test_numba":
+        if stencil_name == "test_numba":
             tic = time.time()
             out_field = test_numba(in_field)
             toc = time.time()
 
-        if stencil_type == "laplacian1d_numbastencil":
+        if stencil_name == "laplacian1d_numbastencil":
             tic = time.time()
             out_field = laplacian1d_numbastencil(in_field)
             toc = time.time()
 
-        if stencil_type == "laplacian2d_numbastencil":
+        if stencil_name == "laplacian2d_numbastencil":
             tic = time.time()
             out_field = laplacian2d_numbastencil(in_field)
             toc = time.time()
 
-        if stencil_type == "laplacian3d_numbastencil":
+        if stencil_name == "laplacian3d_numbastencil":
             tic = time.time()
             out_field = laplacian3d_numbastencil(in_field)
             toc = time.time()
 
-        if stencil_type == "FMA_numbavectorize":
+        if stencil_name == "FMA_numbavectorize":
             tic = time.time()
             out_field = FMA_numbavectorize(in_field, in_field2, in_field3)
             toc = time.time()
 
-        if stencil_type == "lapoflap1d":
+        if stencil_name == "lapoflap1d":
             tic = time.time()
             out_field = lapoflap1d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
             toc = time.time()
 
-        if stencil_type == "lapoflap2d":
+        if stencil_name == "lapoflap2d":
             tic = time.time()
             out_field = lapoflap2d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
             toc = time.time()
 
-        if stencil_type == "lapoflap3d":
+        if stencil_name == "lapoflap3d":
             tic = time.time()
             out_field = lapoflap3d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
             toc = time.time()
 
         time_list.append(toc - tic)
-        # if stencil_type == "laplacian1d_numbavectorize":
+        # if stencil_name == "laplacian1d_numbavectorize":
         #    tic = time.time()
         #    laplacian1d_numbavectorize( in_field)
         #    toc = time.time()
@@ -368,7 +368,7 @@ def main(
         # TODO: Save Elapsed Work Time in table for validation mode
 
     # Append row with calculated work to report
-    append_row(report_name, stencil_type, dim, nx, ny, nz, time_avg, valid_var)
+    append_row(report_name, stencil_name, dim, nx, ny, nz, time_avg, valid_var)
 
     if plot_result:
         plt.imshow(out_field[out_field.shape[0] // 2, :, :], origin="lower")

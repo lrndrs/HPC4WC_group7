@@ -2,14 +2,13 @@ import numpy as np
 from functions.halo_functions import update_halo, add_halo_points
 
 
-def test(in_field, tmp_field):
+def test(in_field):
     """
     Simple test function that returns a copy of the in_field.
     
     Parameters
     ----------
     in_field  : input field (nx x ny x nz).
-    tmp_field : result (must be of same size as in_field).
     
     Returns
     -------

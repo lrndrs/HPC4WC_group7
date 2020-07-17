@@ -14,7 +14,7 @@ https://www.youtube.com/watch?v=x58W9A2lnQc
 ### Run stencil_main.py
 - move to its folder
 - run with:
-python3 stencil_main.py --dim_stencil 3 --nx 10 --ny 10 --nz 10 --num_iter 100 --stencil_type test
+python3 stencil_main.py --dim_stencil 3 --nx 10 --ny 10 --nz 10 --num_iter 100 --stencil_name test
 
 For help about available options type: 
 python3 stencil_main.py --help
@@ -29,7 +29,7 @@ python3 stencil_main.py --help
 - If the field shapes of the original and the control file are not equal, the program stops. To generate however a report with stencils of different field sizes and no validation set the option create_newreport to False. 
 
 Example for validation:
-python3 stencil_main.py --nx 10 --ny 10 --nz 10 --num_iter 100 --stencil_type laplacian_numbaloop --create_field False
+python3 stencil_main.py --nx 10 --ny 10 --nz 10 --num_iter 100 --stencil_name laplacian_numbaloop --create_field False
 
 
 
