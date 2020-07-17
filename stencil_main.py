@@ -57,12 +57,6 @@ from numba import jit
 
 @click.command()
 @click.option(
-    "--dim_stencil",
-    type=int,
-    required=True,
-    help="Number of dimensions for stencil (1-3)",
-)
-@click.option(
     "--nx", type=int, required=True, help="Number of gridpoints in x-direction"
 )
 @click.option(
@@ -108,7 +102,6 @@ from numba import jit
     help="Specify a name for the csv performance report",
 )
 def main(
-    dim_stencil,
     nx,
     ny,
     nz,
@@ -131,7 +124,6 @@ def main(
     assert (
         0 < num_halo <= 256
     ), "Your have to specify a reasonable number of halo points"
-    assert 0 <= dim_stencil <= 3, "Please choose between 0 and 3 dimensions"
     stencil_type_list = [
         "test",
         "laplacian1d",
@@ -208,11 +200,11 @@ def main(
         laplacian3d(in_field, tmp_field, num_halo=num_halo, extend=0)
 
     if stencil_type == "laplacian_numba":
-        laplacian_numba(in_field, tmp_field, dim_stencil, num_halo=num_halo, extend=0)
+        laplacian_numba(in_field, tmp_field, dim, num_halo=num_halo, extend=0)
 
     if stencil_type == "laplacian_numbaloop":
         laplacian_numbaloop(
-            in_field, tmp_field, dim_stencil, num_halo=num_halo, extend=0
+            in_field, tmp_field, dim, num_halo=num_halo, extend=0
         )
 
     if stencil_type == "test":
@@ -225,7 +217,7 @@ def main(
         FMA(in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)
 
     if stencil_type == "FMA_numba":
-        FMA_numba(in_field, dim_stencil=0, num_halo=num_halo, extend=0)
+        FMA_numba(in_field, dim=0, num_halo=num_halo, extend=0)
 
     if stencil_type == "laplacian1d_numbastencil":
         laplacian1d_numbastencil(in_field)
@@ -273,14 +265,14 @@ def main(
         if stencil_type == "laplacian_numba":
             tic = time.time()
             out_field = laplacian_numba(
-                in_field, tmp_field, dim_stencil, num_halo=num_halo, extend=0
+                in_field, tmp_field, dim, num_halo=num_halo, extend=0
             )
             toc = time.time()
 
         if stencil_type == "laplacian_numbaloop":
             tic = time.time()
             out_field = laplacian_numbaloop(
-                in_field, tmp_field, dim_stencil, num_halo=num_halo, extend=0
+                in_field, tmp_field, dim, num_halo=num_halo, extend=0
             )
             toc = time.time()
 
@@ -293,7 +285,7 @@ def main(
 
         if stencil_type == "FMA_numba":
             tic = time.time()
-            out_field = FMA_numba(in_field, dim_stencil=0, num_halo=num_halo, extend=0)
+            out_field = FMA_numba(in_field, dim=0, num_halo=num_halo, extend=0)
             toc = time.time()
 
         if stencil_type == "test":
@@ -376,7 +368,7 @@ def main(
         # TODO: Save Elapsed Work Time in table for validation mode
 
     # Append row with calculated work to report
-    append_row(report_name, stencil_type, dim_stencil, nx, ny, nz, time_avg, valid_var)
+    append_row(report_name, stencil_type, dim, nx, ny, nz, time_avg, valid_var)
 
     if plot_result:
         plt.imshow(out_field[out_field.shape[0] // 2, :, :], origin="lower")

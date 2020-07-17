@@ -1,5 +1,4 @@
 import numpy as np
-from functions.create_field import get_random_field
 from functions.halo_functions import update_halo, add_halo_points
 
 
