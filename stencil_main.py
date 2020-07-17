@@ -240,8 +240,11 @@ def main(dim_stencil, nx, ny, nz, num_iter, stencil_type, num_halo=2, plot_resul
 
     time_avg = sum(time_list)/len(time_list)
     print("In {} iterations the average lapsed time for work is {} s".format(num_iter, time_avg) )
-    print(time_avg)
 
+    if num_iter >= 20:
+        time_avg_first_10 = sum(time_list[0:10])/len(time_list[0:10])
+        time_avg_last_10 = sum(time_list[-11:-1])/len(time_list[-11:-1])
+        print("The average elapes time of the first 10 values is {} and of the last 10 values us {}".format(time_avg_first_10, time_avg_last_10))
 
     #delete halo from out_field
     out_field = remove_halo_points(out_field, num_halo)
