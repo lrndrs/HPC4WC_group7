@@ -48,6 +48,10 @@ from functions.stencils_numba import (
 
 from functions.halo_functions import update_halo, add_halo_points, remove_halo_points
 from numba import jit
+from functions.gt4py_numpy import test_gt4py
+import gt4py
+import gt4py.gtscript as gtscript
+import gt4py.storage as gt_storage
 
 # from functions.create_field import get_random_field
 # from functions.update_halo import update_halo
@@ -72,7 +76,7 @@ from numba import jit
     "--stencil_name",
     type=str,
     required=True,
-    help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba", "laplacian1d_numbastencil","laplacian2d_numbastencil", "laplacian3d_numbastencil", "FMA_numbavectorize", "lapoflap1d", "lapoflap2d", "lapoflap3d"]',
+    help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba", "laplacian1d_numbastencil","laplacian2d_numbastencil", "laplacian3d_numbastencil", "FMA_numbavectorize", "lapoflap1d", "lapoflap2d", "lapoflap3d", "test_gt4py"]',
 )
 @click.option(
     "--num_halo",
@@ -141,6 +145,7 @@ def main(
         "lapoflap1d",
         "lapoflap2d",
         "lapoflap3d",
+        "test_gt4py",
     ]
     if stencil_name not in stencil_name_list:
         print(
@@ -331,6 +336,23 @@ def main(
         if stencil_name == "lapoflap3d":
             tic = time.time()
             out_field = lapoflap3d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
+            toc = time.time()
+            
+        if stencil_name == "test_gt4py":
+            origin = (2, 2, 0) # What does this do???
+            dtype = np.float64
+            backend = "numpy"
+            in_storage = gt_storage.from_array(
+                in_field, backend, default_origin=origin, dtype=dtype 
+            )
+            out_storage = gt_storage.from_array(
+                tmp_field, backend, default_origin=origin, dtype=dtype, 
+            )
+            coeff_storage = gt_storage.from_array(
+                in_field2, backend, default_origin=origin, dtype=dtype,
+            )
+            tic = time.time()
+            test_gt4py(in_storage, out_storage, coeff_storage)
             toc = time.time()
 
         time_list.append(toc - tic)
