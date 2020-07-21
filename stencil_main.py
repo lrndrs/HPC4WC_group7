@@ -32,17 +32,25 @@ from functions.stencils_numpy import (
     lapoflap2d,
     lapoflap3d,
 )
-from functions.stencils_numba import (
+from functions.stencils_numbajit import (
     test_numba,
     laplacian_numba,
-    laplacian_numbaloop,
-    FMA_numba,
+    FMA_numba,    
+) 
+from functions.stencils_numbaloop import (
+    laplacian1d_numbaloop,    
+    laplacian2d_numbaloop,
+    laplacian3d_numbaloop,
+) 
+from functions.stencils_numbastencil import (
     laplacian1d_numbastencil,
     laplacian2d_numbastencil,
     laplacian3d_numbastencil,
     laplacian1d_numbastencil_help,
     laplacian2d_numbastencil_help,
     laplacian3d_numbastencil_help,
+)
+from functions.stencils_numbavectorize import (
     FMA_numbavectorize,
 )  # , laplacian1d_numbavectorize
 
@@ -76,7 +84,7 @@ import gt4py.storage as gt_storage
     "--stencil_name",
     type=str,
     required=True,
-    help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","test_numba","laplacian_numba","laplacian_numbaloop","FMA_numba", "laplacian1d_numbastencil","laplacian2d_numbastencil", "laplacian3d_numbastencil", "FMA_numbavectorize", "lapoflap1d", "lapoflap2d", "lapoflap3d", "test_gt4py"]',
+    help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","test_numba","laplacian_numba","laplacian1d_numbaloop","laplacian2d_numbaloop","FMA_numba", "laplacian1d_numbastencil","laplacian2d_numbastencil", "laplacian3d_numbastencil", "FMA_numbavectorize", "lapoflap1d", "lapoflap2d", "lapoflap3d", "test_gt4py"]',
 )
 @click.option(
     "--num_halo",
@@ -136,7 +144,9 @@ def main(
         "FMA",
         "test_numba",
         "laplacian_numba",
-        "laplacian_numbaloop",
+        "laplacian1d_numbaloop",
+        "laplacian2d_numbaloop",
+        "laplacian3d_numbaloop",
         "FMA_numba",
         "laplacian1d_numbastencil",
         "laplacian2d_numbastencil",
@@ -207,11 +217,21 @@ def main(
     if stencil_name == "laplacian_numba":
         laplacian_numba(in_field, tmp_field, dim, num_halo=num_halo, extend=0)
 
-    if stencil_name == "laplacian_numbaloop":
-        laplacian_numbaloop(
-            in_field, tmp_field, dim, num_halo=num_halo, extend=0
+    if stencil_name == "laplacian1d_numbaloop":
+        laplacian1d_numbaloop(
+            in_field, tmp_field, num_halo=num_halo, extend=0
+        )
+        
+    if stencil_name == "laplacian2d_numbaloop":
+        laplacian2d_numbaloop(
+            in_field, tmp_field, num_halo=num_halo, extend=0
         )
 
+    if stencil_name == "laplacian3d_numbaloop":
+        laplacian3d_numbaloop(
+            in_field, tmp_field, num_halo=num_halo, extend=0
+        )
+        
     if stencil_name == "test":
         test(in_field)
 
@@ -274,13 +294,27 @@ def main(
             )
             toc = time.time()
 
-        if stencil_name == "laplacian_numbaloop":
+        if stencil_name == "laplacian1d_numbaloop":
             tic = time.time()
-            out_field = laplacian_numbaloop(
-                in_field, tmp_field, dim, num_halo=num_halo, extend=0
+            out_field = laplacian1d_numbaloop(
+                in_field, tmp_field, num_halo=num_halo, extend=0
             )
             toc = time.time()
 
+        if stencil_name == "laplacian2d_numbaloop":
+            tic = time.time()
+            out_field = laplacian2d_numbaloop(
+                in_field, tmp_field, num_halo=num_halo, extend=0
+            )
+            toc = time.time()
+            
+        if stencil_name == "laplacian3d_numbaloop":
+            tic = time.time()
+            out_field = laplacian3d_numbaloop(
+                in_field, tmp_field, num_halo=num_halo, extend=0
+            )
+            toc = time.time()
+            
         if stencil_name == "FMA":
             tic = time.time()
             out_field = FMA(
