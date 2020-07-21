@@ -10,6 +10,7 @@ import numpy as np
 import click
 import matplotlib
 import sys
+import os.path
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -95,7 +96,7 @@ import gt4py.storage as gt_storage
     "--backend",
     type=str,
     required=True,
-    help='Options are ["numpy", "numbajit", "numbaloop", "numbastencil", "numbavectorize", "gt4py"]',
+    help='Options are ["numpy", "numbajit", "numbajit_inplace", numbaloop", "numbastencil", "numbavectorize", "gt4py"]',
 )
 @click.option(
     "--num_halo",
@@ -111,6 +112,13 @@ import gt4py.storage as gt_storage
     type=bool,
     default=True,
     help="Create a Field (True) or Validate from saved field (False)",
+)
+
+@click.option(
+    "--field_name",
+    type=str,
+    default="test",
+    help="Name the testfield, that will be created or from which will be validated. File ending is added automatically.",
 )
 @click.option(
     "--create_newreport",
@@ -134,10 +142,11 @@ def main(
     num_halo=2,
     plot_result=False,
     create_field=True,
+    field_name="test",
     create_newreport=True,
     report_name="performance_report.csv",
 ):
-    """Driver for apply_diffusion that sets up fields and does timings"""
+    """Driver for high-level comparison of stencil computation. HPC4WC group 7 coursework."""
 
     assert 0 < nx <= 1024 * 1024, "You have to specify a reasonable value for nx"
     assert 0 < ny <= 1024 * 1024, "You have to specify a reasonable value for ny"
@@ -167,7 +176,7 @@ def main(
         )
         sys.exit(0)
 
-    backend_list = ["numpy", "numbajit", "numbaloop", "numbastencil", "numbavectorize", "gt4py"]
+    backend_list = ["numpy", "numbajit", "numbajit_inplace", "numbaloop", "numbastencil", "numbavectorize", "gt4py"]
     if backend not in backend_list:
         print(
             "please make sure you choose one of the following backends: {}".format(
@@ -181,12 +190,12 @@ def main(
 
     # create field for validation
     if create_field == True:
-        in_field = create_new_infield(nx, ny, nz)
-        if create_newreport:
+        in_field = create_new_infield(nx, ny, nz,field_name)
+    if create_newreport:
             new_reportfile(report_name)
 
     if create_field == False:
-        in_field = create_val_infield(nx, ny, nz)
+        in_field = create_val_infield(nx, ny, nz,field_name)
 
     # np.save('in_field', in_field)
     if plot_result:
@@ -260,7 +269,21 @@ def main(
 
 #         if stencil_name == "lapoflap3d":
 #             stencils_numbajit.lapoflap3d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)   
-            
+    
+    if backend == "numbajit_inplace":
+        if stencil_name == "laplacian1d":
+            stencil = njit(stencils_numpy.laplacian1d)#, parallel=False, cache=False, fastmath=False)
+            stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+        if stencil_name == "laplacian2d":
+            stencil = njit(stencils_numpy.laplacian2d)
+            stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+        if stencil_name == "laplacian3d":
+            stencil = njit(stencils_numpy.laplacian3d,)
+            stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+        if stencil_name == "FMA":
+            stencil = njit(stencils_numpy.FMA)
+            stencil(in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)    
+        
     if backend == "numbaloop":
         if stencil_name == "laplacian1d":
             stencils_numbaloop.laplacian1d(
@@ -346,8 +369,6 @@ def main(
         if backend == "numbajit":
             if stencil_name == "test":
                 tic = time.time()
-                #stencil = njit(stencils_numpy.test, parallel=False)
-                #out_field = stencil(in_field)
                 out_field = stencils_numbajit.test(in_field)
                 toc = time.time()
             
@@ -386,7 +407,25 @@ def main(
 #                 tic = time.time()
 #                 out_field = stencils_numbajit.lapoflap3d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
 #                 toc = time.time()
-                
+        
+        if backend == "numbajit_inplace":
+            if stencil_name == "laplacian1d":
+                tic = time.time()
+                out_field = stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+                toc = time.time()
+            if stencil_name == "laplacian2d":
+                tic = time.time()
+                out_field = stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+                toc = time.time()
+            if stencil_name == "laplacian3d":
+                tic = time.time()
+                out_field = stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+                toc = time.time()
+            if stencil_name == "FMA":
+                tic = time.time()
+                out_field = stencil(in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0) 
+                toc = time.time()
+            
         if backend == "numbaloop":
             if stencil_name == "laplacian1d":
                 tic = time.time()
@@ -478,11 +517,11 @@ def main(
 
     # Save or validate Outfield
     if create_field == True:
-        save_newoutfield(out_field)
+        save_newoutfield(out_field,field_name)
         valid_var = "-"
 
     if create_field == False:
-        valid_var = validate_outfield(out_field)
+        valid_var = validate_outfield(out_field,field_name)
         # TODO: Save Elapsed Work Time in table for validation mode
 
     # Append row with calculated work to report

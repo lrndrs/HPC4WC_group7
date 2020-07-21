@@ -2,10 +2,9 @@
 # Functions for Field validation
 # ******************************************************
 
-import numpy as np
 
 
-def create_new_infield(nx, ny, nz):
+def create_new_infield(nx, ny, nz,field_name):
     """
     Creates a new 3D infield that is saved as .npy file and can be used for validation purposes.
 
@@ -14,6 +13,7 @@ def create_new_infield(nx, ny, nz):
     nx : field size in x-Direction.
     ny : field size in y-Direction.
     nz : field size in z-Direction.
+    field_name : string of formatted field
 
     Returns
     -------
@@ -21,12 +21,12 @@ def create_new_infield(nx, ny, nz):
 
     """
     testfield = np.random.rand(nx, ny, nz)
-    np.save("test_infield.npy", testfield)
+    np.save("testfields/{}_infield.npy".format(field_name), testfield)
 
     return testfield
 
 
-def create_val_infield(nx, ny, nz):
+def create_val_infield(nx, ny, nz,field_name):
     """
     Loads an 3D infield that is saved as .npy file and can be used for validation purposes.
     Controls if new fieldsize is equivalent to the original field size.
@@ -42,8 +42,11 @@ def create_val_infield(nx, ny, nz):
     testfield : Field used for stencil computation
 
     """
-
-    testfield = np.load("test_infield.npy")
+    if os.path.exists("testfields/{}_infield.npy".format(field_name))== False :
+        print("ERROR: Fieldname does not exist yet.")
+        exit()
+    
+    testfield = np.load("testfields/{}_infield.npy".format(field_name))
     if (
         (testfield.shape[0] != nx)
         or (testfield.shape[1] != ny)
@@ -55,37 +58,43 @@ def create_val_infield(nx, ny, nz):
     return testfield
 
 
-def save_newoutfield(out_field):
+def save_newoutfield(out_field,field_name):
     """
     Saves a new Out field to a .npy file.
 
     Parameters
     ----------
     out_field : 3D field after stencil computation
+    field_name : field name
 
     Returns
     -------
     Print and save to .npy file
 
     """
-    np.save("test_outfield.npy", out_field)
-    print("New output field saved.")
+    np.save("testfields/{}_outfield.npy".format(field_name), out_field)
+    print("New output field {} saved.".format(field_name))
 
 
-def validate_outfield(out_field):
+def validate_outfield(out_field,field_name):
     """
     Reads in the original file and compares it to the current out-field. Validates the results of the stencil computation
 
     Parameters
     ----------
     out_field : 3D field after stencil computation
+    field_name : field name
 
     Returns
     -------
     valid_var : boolean variable if Validation of array is true/false
 
     """
-    testfield = np.load("test_outfield.npy")
+    if os.path.exists("testfields/{}_outfield.npy".format(field_name))== False :
+        print("ERROR: Fieldname does not exist yet.")
+        exit()
+    
+    testfield = np.load("testfields/{}_outfield.npy".format(field_name))
 
     valid_var = np.all(np.equal(testfield, out_field))
     print("Result of field validation is:", valid_var)
