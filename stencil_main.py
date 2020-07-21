@@ -10,6 +10,7 @@ import numpy as np
 import click
 import matplotlib
 import sys
+import os.path
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -95,7 +96,7 @@ import gt4py.storage as gt_storage
     "--backend",
     type=str,
     required=True,
-    help='Options are ["numpy", "numbajit", "numbaloop", "numbastencil", "numbavectorize", "gt4py"]',
+    help='Specify the Backend. Options are ["numpy", "numbajit", "numbaloop", "numbastencil", "numbavectorize", "gt4py"]',
 )
 @click.option(
     "--num_halo",
@@ -111,6 +112,13 @@ import gt4py.storage as gt_storage
     type=bool,
     default=True,
     help="Create a Field (True) or Validate from saved field (False)",
+)
+
+@click.option(
+    "--field_name",
+    type=str,
+    default="test",
+    help="Name the testfield, that will be created or from which will be validated. File ending is added automatically.",
 )
 @click.option(
     "--create_newreport",
@@ -134,10 +142,11 @@ def main(
     num_halo=2,
     plot_result=False,
     create_field=True,
+    field_name="test",
     create_newreport=True,
     report_name="performance_report.csv",
 ):
-    """Driver for apply_diffusion that sets up fields and does timings"""
+    """Driver for high-level comparison of stencil computation. HPC4WC group 7 coursework."""
 
     assert 0 < nx <= 1024 * 1024, "You have to specify a reasonable value for nx"
     assert 0 < ny <= 1024 * 1024, "You have to specify a reasonable value for ny"
@@ -178,25 +187,15 @@ def main(
     alpha = 1.0 / 32.0
     dim = 3
 
-    # Set field constraints according to dim_stencil
-    # if dim_stencil ==1:
-    #     if nx!=1 or ny!=1:
-    #       print('WARNING: Dimension is set to 1D, only nz value is considered.')
-    #     nx,ny=1
-
-    # if dim_stencil ==2:
-    #     if nx!=1:
-    #       print('WARNING: Dimension is set to 2D, only nz and ny values are considered.')
-    #     nx=1
 
     # create field for validation
     if create_field == True:
-        in_field = create_new_infield(nx, ny, nz)
-        if create_newreport:
+        in_field = create_new_infield(nx, ny, nz,field_name)
+    if create_newreport:
             new_reportfile(report_name)
 
     if create_field == False:
-        in_field = create_val_infield(nx, ny, nz)
+        in_field = create_val_infield(nx, ny, nz,field_name)
 
     # np.save('in_field', in_field)
     if plot_result:
@@ -488,11 +487,11 @@ def main(
 
     # Save or validate Outfield
     if create_field == True:
-        save_newoutfield(out_field)
+        save_newoutfield(out_field,field_name)
         valid_var = "-"
 
     if create_field == False:
-        valid_var = validate_outfield(out_field)
+        valid_var = validate_outfield(out_field,field_name)
         # TODO: Save Elapsed Work Time in table for validation mode
 
     # Append row with calculated work to report
