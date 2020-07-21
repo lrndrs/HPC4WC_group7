@@ -20,7 +20,7 @@ def laplacian1d_numbastencil_help(in_field):
 
 
 @njit()
-def laplacian1d_numbastencil(in_field):
+def laplacian1d(in_field):
     """
     Function that boosts the function laplacian1d_numbastencil_help
     
@@ -58,7 +58,7 @@ def laplacian2d_numbastencil_help(in_field):
 
 
 @njit()
-def laplacian2d_numbastencil(in_field):
+def laplacian2d(in_field):
     """
     Function that boosts the function laplacian2d_numbastencil_help
     
@@ -98,7 +98,7 @@ def laplacian3d_numbastencil_help(in_field):
 
 
 @njit()
-def laplacian3d_numbastencil(in_field):
+def laplacian3d(in_field):
     """
     Function that boosts the function laplacian3d_numbastencil_help
     

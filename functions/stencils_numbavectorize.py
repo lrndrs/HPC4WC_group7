@@ -8,7 +8,7 @@ from numba import vectorize, guvectorize, float64, int32
 # vectorize only works for point-wise stencils. maybe @guvectorize does the job for non-point-wise stencils
 # did not yet found a way to deal with the halo
 @vectorize([float64(float64, float64, float64)], nopython=True)  # target="parallel"
-def FMA_numbavectorize(in_field, in_field2, in_field3):
+def FMA(in_field, in_field2, in_field3):
     return in_field + in_field2 * in_field3
 
 

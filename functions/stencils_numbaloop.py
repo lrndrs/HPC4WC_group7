@@ -9,7 +9,7 @@ from numba import jit#, njit
 
 @jit(nopython=True, debug=True)
 # @njit()
-def laplacian1d_numbaloop(in_field, tmp_field, num_halo=1, extend=0):
+def laplacian1d(in_field, tmp_field, num_halo=1, extend=0):
     """Compute Laplacian using 2nd-order centered differences with an explicit nested loop in numba.
     
     in_field  -- input field (nz x ny x nx with halo in x- and y-direction)
@@ -34,7 +34,7 @@ def laplacian1d_numbaloop(in_field, tmp_field, num_halo=1, extend=0):
      
 @jit(nopython=True, debug=True)
 # @njit()
-def laplacian2d_numbaloop(in_field, tmp_field, num_halo=1, extend=0):
+def laplacian2d(in_field, tmp_field, num_halo=1, extend=0):
     """Compute Laplacian using 2nd-order centered differences with an explicit nested loop in numba.
     
     in_field  -- input field (nz x ny x nx with halo in x- and y-direction)
@@ -68,7 +68,7 @@ def laplacian2d_numbaloop(in_field, tmp_field, num_halo=1, extend=0):
     
 @jit(nopython=True, debug=True)
 # @njit()
-def laplacian3d_numbaloop(in_field, tmp_field, num_halo=1, extend=0):
+def laplacian3d(in_field, tmp_field, num_halo=1, extend=0):
     """Compute Laplacian using 2nd-order centered differences with an explicit nested loop in numba.
     
     in_field  -- input field (nz x ny x nx with halo in x- and y-direction)

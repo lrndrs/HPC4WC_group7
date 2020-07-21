@@ -29,16 +29,15 @@ python3 stencil_main.py --help
 - If the field shapes of the original and the control file are not equal, the program stops. To generate however a report with stencils of different field sizes and no validation set the option create_newreport to False. 
 
 Example for validation:
-python3 stencil_main.py --nx 10 --ny 10 --nz 10 --num_iter 100 --stencil_name laplacian_numbaloop --create_field False
+python3 stencil_main.py --nx 10 --ny 10 --nz 10 --num_iter 100 --backend numpy --stencil_name laplacian1d --create_field False
 
 
 
 ### Next To Do's:
-* implement laplap
+
 
 
 ### Fragezeichen
-*Clarify in which direction are we calculating the 1D, 2D, 3D laplacian (which dim is the first dim): similar to laplacian code we would take Z dim as first dim?
 *Do we need the backup if the halos have the size 1 that the last value is not used for calculation? (yes for laplap?)
 then: how to implement this in numba?
 

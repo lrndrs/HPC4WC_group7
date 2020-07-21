@@ -5,117 +5,293 @@
 # ******************************************************
 
 import numpy as np
-from numba import jit, njit, vectorize, stencil, stencils
-from numba import vectorize, guvectorize, float64, int32
+from numba import jit, njit
+
+#@njit()
+#def njit_
+
+
+#def njit_parallel
+#def njit_fastmath
+#def njit_cache
+#def njit_python
 
 
 @jit(nopython=True)
-def test_numba(in_field):
-    # simple test function that does nothing
-    out_field = np.copy(in_field)
+def test(in_field):
+    """
+    Simple test function that returns a copy of the in_field.
+    
+    Parameters
+    ----------
+    in_field  : input field (nx x ny x nz).
+    
+    Returns
+    -------
+    tmp_field : a copy of the in_field.
+    
+    """
+    tmp_field = np.copy(in_field)
 
-    return out_field
-
+    return tmp_field
 
 @jit(nopython=True)
-def laplacian_numba(in_field, lap_field, dim_stencil, num_halo=1, extend=0):
-    """Compute Laplacian using 2nd-order centered differences.
+def laplacian1d(in_field, tmp_field, num_halo=1, extend=0):
+    """
+    Compute Laplacian in i-direction using 2nd-order centered differences.
     
-    in_field  -- input field (nz x ny x nx with halo in x- and y-direction)
-    lap_field -- result (must be same size as in_field)
-    dim_stencil       -- number of dimensions of the stencil (1-3)
-    num_halo  -- number of halo points
+    Parameters
+    ----------
+    in_field  : input field (nx x ny x nz).
+    tmp_field : result (must be of same size as in_field).
+    num_halo  : number of halo points.
+    extend    : extend computation into halo-zone by this number of points.
     
-    Keyword arguments:
-    extend    -- extend computation into halo-zone by this number of points
+    Returns
+    -------
+    tmp_field : in_field with Laplacian computed in i-direction.
+    
     """
 
-    # since laplacian is not defined for pointwise stencils.
-    assert (
-        0 < dim_stencil <= 3
-    ), "The laplacian is not defined for pointwise stencils. Please choose between 1 to 3 dimensions."
+    ib = num_halo - extend
+    ie = -num_halo + extend
 
-    if dim_stencil == 1:
-        ib = num_halo - extend
-        ie = -num_halo + extend
+    tmp_field[ib:ie, :, :] = (
+        -2.0 * in_field[ib:ie, :, :]
+        + in_field[ib - 1 : ie - 1, :, :]
+        + in_field[ib + 1 : ie + 1 if ie != -1 else None, :, :]
+    )
 
-        # lap_field[ib:ie] = - 2. * in_field[ib:ie]  \
-        #    + in_field[ib - 1:ie - 1] + in_field[ib + 1:ie + 1 if ie != -1 else None]
-        lap_field[:, :, ib:ie] = (
-            -2.0 * in_field[:, :, ib:ie]
-            + in_field[:, :, ib - 1 : ie - 1]
-            + in_field[:, :, ib + 1 : ie + 1 if ie != -1 else None]
-        )
-
-        return lap_field
-
-    if dim_stencil == 2:
-        ib = num_halo - extend
-        ie = -num_halo + extend
-        jb = num_halo - extend
-        je = -num_halo + extend
-
-        # lap_field[jb:je, ib:ie] = - 4. * in_field[jb:je, ib:ie]  \
-        #    + in_field[jb:je, ib - 1:ie - 1] + in_field[jb:je, ib + 1:ie + 1 if ie != -1 else None]  \
-        #    + in_field[jb - 1:je - 1, ib:ie] + in_field[jb + 1:je + 1 if je != -1 else None, ib:ie]
-        lap_field[:, jb:je, ib:ie] = (
-            -4.0 * in_field[:, jb:je, ib:ie]
-            + in_field[:, jb:je, ib - 1 : ie - 1]
-            + in_field[:, jb:je, ib + 1 : ie + 1 if ie != -1 else None]
-            + in_field[:, jb - 1 : je - 1, ib:ie]
-            + in_field[:, jb + 1 : je + 1 if je != -1 else None, ib:ie]
-        )
-
-        return lap_field
-
-    if dim_stencil == 3:
-        ib = num_halo - extend
-        ie = -num_halo + extend
-        jb = num_halo - extend
-        je = -num_halo + extend
-        kb = num_halo - extend
-        ke = -num_halo + extend
-
-        lap_field[kb:ke, jb:je, ib:ie] = (
-            -6.0 * in_field[kb:ke, jb:je, ib:ie]
-            + in_field[kb:ke, jb:je, ib - 1 : ie - 1]
-            + in_field[kb:ke, jb:je, ib + 1 : ie + 1 if ie != -1 else None]
-            + in_field[kb:ke, jb - 1 : je - 1, ib:ie]
-            + in_field[kb:ke, jb + 1 : je + 1 if je != -1 else None, ib:ie]
-            + in_field[kb - 1 : ke - 1, jb:je, ib:ie]
-            + in_field[kb + 1 : ke + 1 if ke != -1 else None, jb:je, ib:ie]
-        )
-
-        return lap_field
-
-
-
+    return tmp_field
 
 @jit(nopython=True)
-def FMA_numba(in_field, dim_stencil=0, num_halo=0, extend=0):
-    """pointwise stencil to test for fused multiply-add 
+def laplacian2d(in_field, tmp_field, num_halo=1, extend=0):
+    """
+    Compute Laplacian in i- and j-direction using 2nd-order centered differences.
     
-    in_field  -- input field (nz x ny x nx with halo in x- and y-direction)
-    tmp_field -- result (must be same size as in_field)
-    dim_stencil       -- number of dimension (0)
-    num_halo  -- number of halo points
+    Parameters
+    ----------
+    in_field  : input field (nx x ny x nz).
+    tmp_field : result (must be of same size as in_field).
+    num_halo  : number of halo points.
+    extend    : extend computation into halo-zone by this number of points.
     
-    Keyword arguments:
-    extend    -- extend computation into halo-zone by this number of points
+    Returns
+    -------
+    tmp_field : in_field with Laplacian computed in i- and j-direction (horizontal Laplacian).
+    
     """
 
-    # FMA is a pointwise stencil
-    assert (
-        0 == dim_stencil
-    ), "Please do not provide any input for dim_stencil for this stencil or set dim_stencil=0."
+    ib = num_halo - extend
+    ie = -num_halo + extend
+    jb = num_halo - extend
+    je = -num_halo + extend
 
-    # not finished; fields should likely be initialized in main.py since the initialisation also takes time.
-    in_field2 = np.ones_like(in_field)
-    in_field3 = np.ones_like(in_field) * 4.2
-    # get_random_field(dim, nx+2*num_halo, ny+2*num_halo, nz+2*num_halo)
-    # in_field3_FMA = get_random_field(dim, nx+2*num_halo, ny+2*num_halo, nz+2*num_halo)
+    tmp_field[ib:ie, jb:je, :] = (
+        -4.0 * in_field[ib:ie, jb:je, :]
+        + in_field[ib - 1 : ie - 1, jb:je, :]
+        + in_field[ib + 1 : ie + 1 if ie != -1 else None, jb:je, :]
+        + in_field[ib:ie, jb - 1 : je - 1, :]
+        + in_field[ib:ie, jb + 1 : je + 1 if je != -1 else None, :]
+    )
 
-    FMA_field = in_field + in_field2 * in_field3
-    return FMA_field
+    return tmp_field
 
+@jit(nopython=True)
+def laplacian3d(in_field, tmp_field, num_halo=1, extend=0):
+    """
+    Compute Laplacian in i-, j- and k-direction using 2nd-order centered differences.
+    
+    Parameters
+    ----------
+    in_field  : input field (nx x ny x nz).
+    tmp_field : result (must be of same size as in_field).
+    num_halo  : number of halo points.
+    extend    : extend computation into halo-zone by this number of points.
+    
+    Returns
+    -------
+    tmp_field : in_field with Laplacian computed in i-, j- and k- direction (full Laplacian).
+    
+    """
+
+    ib = num_halo - extend
+    ie = -num_halo + extend
+    jb = num_halo - extend
+    je = -num_halo + extend
+    kb = num_halo - extend
+    ke = -num_halo + extend
+
+    tmp_field[ib:ie, jb:je, kb:ke] = (
+        -6.0 * in_field[ib:ie, jb:je, kb:ke]
+        + in_field[ib - 1 : ie - 1, jb:je, kb:ke]
+        + in_field[ib + 1 : ie + 1 if ie != -1 else None, jb:je, kb:ke]
+        + in_field[ib:ie, jb - 1 : je - 1, kb:ke]
+        + in_field[ib:ie, jb + 1 : je + 1 if je != -1 else None, kb:ke]
+        + in_field[ib:ie, jb:je, kb - 1 : ke - 1]
+        + in_field[ib:ie, jb:je, kb + 1 : ke + 1 if ke != -1 else None]
+    )
+
+    return tmp_field
+
+@jit(nopython=True)
+def FMA(in_field, in_field2, in_field3, tmp_field, num_halo=0, extend=0):
+    """
+    Pointwise stencil to test for fused multiply-add 
+    
+    Parameters
+    ----------
+    in_field  : input field (nx x ny x nz).
+    tmp_field : result (must be of same size as in_field).
+    num_halo  : number of halo points.
+    extend    : extend computation into halo-zone by this number of points.
+    
+    Returns
+    -------
+    tmp_field : fused multiply-add applied to in_field.
+    
+    """
+
+    tmp_field = in_field + in_field2 * in_field3
+
+    return tmp_field
+
+#Not yet working
+# @jit(nopython=False)
+# def lapoflap1d(in_field, tmp_field, tmp2_field, num_halo=2, extend=1):
+#     """
+#     Compute Laplacian of the Laplacian in i-direction using 2nd-order centered differences.
+    
+#     Parameters
+#     ----------
+#     in_field   : input field (nx x ny x nz).
+#     tmp_field  : intermediate result (must be of same size as in_field).
+#     tmp2_field : result (must be of same size as in_field).
+#     num_halo   : number of halo points.
+#     extend     : extend computation into halo-zone by this number of points.
+    
+#     Returns
+#     -------
+#     tmp2_field  : in_field with Laplacian of the Laplacian computed in i-direction.
+    
+#     """
+
+#     ib = num_halo - extend
+#     ie = -num_halo + extend
+#     tmp_field[ib:ie, :, :] = (
+#         -2.0 * in_field[ib:ie, :, :]
+#         + in_field[ib - 1 : ie - 1, :, :]
+#         + in_field[ib + 1 : ie + 1 if ie != -1 else None, :, :]
+#     )
+
+#     extend = 0
+#     ib = num_halo - extend
+#     ie = -num_halo + extend
+#     tmp2_field[ib:ie, :, :] = (
+#         -2.0 * tmp_field[ib:ie, :, :]
+#         + tmp_field[ib - 1 : ie - 1, :, :]
+#         + tmp_field[ib + 1 : ie + 1 if ie != -1 else None, :, :]
+#     )
+
+#     return tmp2_field
+
+# @jit(nopython=True)
+# def lapoflap2d(in_field, tmp_field, tmp2_field, num_halo=2, extend=1):
+#     """
+#     Compute Laplacian of the Laplacian in i- and j-direction using 2nd-order centered differences.
+    
+#     Parameters
+#     ----------
+#     in_field   : input field (nx x ny x nz).
+#     tmp_field  : intermediate result (must be of same size as in_field).
+#     tmp2_field : result (must be of same size as in_field).
+#     num_halo   : number of halo points.
+#     extend     : extend computation into halo-zone by this number of points.
+    
+#     Returns
+#     -------
+#     tmp2_field  : in_field with Laplacian of the Laplacian computed in i- and j-direction (horizontally).
+    
+#     """
+#     ib = num_halo - extend
+#     ie = -num_halo + extend
+#     jb = num_halo - extend
+#     je = -num_halo + extend
+#     tmp_field[ib:ie, jb:je, :] = (
+#         -4.0 * in_field[ib:ie, jb:je, :]
+#         + in_field[ib - 1 : ie - 1, jb:je, :]
+#         + in_field[ib + 1 : ie + 1 if ie != -1 else None, jb:je, :]
+#         + in_field[ib:ie, jb - 1 : je - 1, :]
+#         + in_field[ib:ie, jb + 1 : je + 1 if je != -1 else None, :]
+#     )
+
+#     extend = 0
+#     ib = num_halo - extend
+#     ie = -num_halo + extend
+#     jb = num_halo - extend
+#     je = -num_halo + extend
+#     tmp2_field[ib:ie, jb:je, :] = (
+#         -4.0 * tmp_field[ib:ie, jb:je, :]
+#         + tmp_field[ib - 1 : ie - 1, jb:je, :]
+#         + tmp_field[ib + 1 : ie + 1 if ie != -1 else None, jb:je, :]
+#         + tmp_field[ib:ie, jb - 1 : je - 1, :]
+#         + tmp_field[ib:ie, jb + 1 : je + 1 if je != -1 else None, :]
+#     )
+
+#     return tmp2_field
+
+# @jit(nopython=True)
+# def lapoflap3d(in_field, tmp_field, tmp2_field, num_halo=2, extend=1):
+#     """
+#     Compute Laplacian of the Laplacian in i-, j- and k-direction using 2nd-order centered differences.
+    
+#     Parameters
+#     ----------
+#     in_field  : input field (nx x ny x nz).
+#     tmp_field  : intermediate result (must be of same size as in_field).
+#     tmp2_field : result (must be of same size as in_field).
+#     num_halo  : number of halo points.
+#     extend    : extend computation into halo-zone by this number of points.
+    
+#     Returns
+#     -------
+#     tmp2_field : in_field with Laplacian of the Laplacian computed in i-, j- and k- direction.
+    
+#     """
+
+#     ib = num_halo - extend
+#     ie = -num_halo + extend
+#     jb = num_halo - extend
+#     je = -num_halo + extend
+#     kb = num_halo - extend
+#     ke = -num_halo + extend
+#     tmp_field[ib:ie, jb:je, kb:ke] = (
+#         -6.0 * in_field[ib:ie, jb:je, kb:ke]
+#         + in_field[ib - 1 : ie - 1, jb:je, kb:ke]
+#         + in_field[ib + 1 : ie + 1 if ie != -1 else None, jb:je, kb:ke]
+#         + in_field[ib:ie, jb - 1 : je - 1, kb:ke]
+#         + in_field[ib:ie, jb + 1 : je + 1 if je != -1 else None, kb:ke]
+#         + in_field[ib:ie, jb:je, kb - 1 : ke - 1]
+#         + in_field[ib:ie, jb:je, kb + 1 : ke + 1 if ke != -1 else None]
+#     )
+
+#     extend = 0
+#     ib = num_halo - extend
+#     ie = -num_halo + extend
+#     jb = num_halo - extend
+#     je = -num_halo + extend
+#     kb = num_halo - extend
+#     ke = -num_halo + extend
+
+#     tmp2_field[ib:ie, jb:je, kb:ke] = (
+#         -6.0 * tmp_field[ib:ie, jb:je, kb:ke]
+#         + tmp_field[ib - 1 : ie - 1, jb:je, kb:ke]
+#         + tmp_field[ib + 1 : ie + 1 if ie != -1 else None, jb:je, kb:ke]
+#         + tmp_field[ib:ie, jb - 1 : je - 1, kb:ke]
+#         + tmp_field[ib:ie, jb + 1 : je + 1 if je != -1 else None, kb:ke]
+#         + tmp_field[ib:ie, jb:je, kb - 1 : ke - 1]
+#         + tmp_field[ib:ie, jb:je, kb + 1 : ke + 1 if ke != -1 else None]
+#     )
+
+#     return tmp2_field
 
