@@ -10,6 +10,7 @@ import numpy as np
 import click
 import matplotlib
 import sys
+import numba
 
 
 matplotlib.use("Agg")
@@ -38,7 +39,8 @@ from functions import stencils_numpy
     #stencils_numpy.lapoflap2d,
     #stencils_numpy.lapoflap3d,
 #)
-from functions import stencils_numbajit
+from functions import stencils_numba_vector_decorator
+from functions import stencils_numba_vector_function
 #(
 #    test_numba,
 #    laplacian_numba,
@@ -65,7 +67,7 @@ from functions import stencils_numbavectorize
 #)  # , laplacian1d_numbavectorize
 
 from functions.halo_functions import update_halo, add_halo_points, remove_halo_points
-#from numba import jit, njit
+
 # from functions.gt4py_numpy import test_gt4py
 # import gt4py
 # import gt4py.gtscript as gtscript
@@ -143,6 +145,10 @@ from functions.halo_functions import update_halo, add_halo_points, remove_halo_p
     default=False,
     help="Save the individual runtimes into a df.",
 )
+
+@click.option('--backend_opts', type=(str, bool),default=('parallel',True))
+
+
 def main(
     nx,
     ny,
@@ -155,7 +161,8 @@ def main(
     create_field=True,
     field_name="test",
     df_name="df",
-    save_runtime=False
+    save_runtime=False,
+    backend_opts=('parallel',True)
 ):
     """Driver for high-level comparison of stencil computation. HPC4WC group 7 coursework."""
 
@@ -187,7 +194,7 @@ def main(
         )
         sys.exit(0)
 
-    backend_list = ["numpy", "numbajit", "numbajit_inplace", "numbaloop", "numbastencil", "numbavectorize", "gt4py"]
+    backend_list = ["numpy", "numba_vector_function", "numba_vector_decorator", "numbaloop", "numbastencil", "numbavectorize", "gt4py"]
     if backend not in backend_list:
         print(
             "please make sure you choose one of the following backends: {}".format(
@@ -223,6 +230,10 @@ def main(
     in_field3 = np.ones_like(in_field) * 4.2
     tmp_field = np.empty_like(in_field)
 
+#----
+    if (backend_opts[0]=='parallel'):
+        parallel_opt=backend_opts[1]
+
     # warmup caches
     if backend == "numpy":#("numpy" or "numbajit"):
         if stencil_name == "test":
@@ -249,49 +260,59 @@ def main(
         if stencil_name == "lapoflap3d":
             stencils_numpy.lapoflap3d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
     
-    if backend == "numbajit":
+    if backend == "numba_vector_function":
         #if stencil_name == "laplacian1d":
         #    stencil = njit(stencils_numpy.laplacian1d, parallel=True, cache=True, fastmath=False)
         #    stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
             
         if stencil_name == "test":
-            stencils_numbajit.test(in_field)
+            numba_vector_test = numba.njit(stencils_numpy.test,parallel=parallel_opt)
+            numba_vector_test(in_field)
 
         if stencil_name == "laplacian1d":
-            stencils_numbajit.laplacian1d(in_field, tmp_field, num_halo=num_halo, extend=0)
-            #print(stencils_numbajit.laplacian1d.inspect_types())
+            numba_vector_laplacian=numba.njit(stencils_numpy.laplacian1d,parallel=parallel_opt)
+            numba_vector_laplacian(in_field, tmp_field, num_halo=num_halo, extend=0)
 
         if stencil_name == "laplacian2d":
-            stencils_numbajit.laplacian2d(in_field, tmp_field, num_halo=num_halo, extend=0)
+            numba_vector_laplacian=numba.njit(stencils_numpy.laplacian2d,parallel=parallel_opt)
+            numba_vector_laplacian(in_field, tmp_field, num_halo=num_halo, extend=0)
 
         if stencil_name == "laplacian3d":
-            stencils_numbajit.laplacian3d(in_field, tmp_field, num_halo=num_halo, extend=0)
+            numba_vector_laplacian=numba.njit(stencils_numpy.laplacian3d,parallel=parallel_opt)
+            numba_vector_laplacian(in_field, tmp_field, num_halo=num_halo, extend=0)
+            
+        # if stencil_name == "FMA":
+        #     stencils_numba_vector.FMA(in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)
             
         if stencil_name == "FMA":
-            stencils_numbajit.FMA(in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)
+            numba_vector_FMA = numba.njit(stencils_numpy.FMA,parallel=parallel_opt)
+            numba_vector_FMA(in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)  
         
-#         if stencil_name == "lapoflap1d":
-#             stencils_numbajit.lapoflap1d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
+        if stencil_name == "lapoflap1d":
+            numba_vector_laplap= numba.njit(stencils_numpy.lapoflap1d,parallel=parallel_opt)
+            numba_vector_laplap(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
 
-#         if stencil_name == "lapoflap2d":
-#             stencils_numbajit.lapoflap2d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
+        if stencil_name == "lapoflap2d":
+            numba_vector_laplap= numba.njit(stencils_numpy.lapoflap2d,parallel=parallel_opt)
+            numba_vector_laplap(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
 
-#         if stencil_name == "lapoflap3d":
-#             stencils_numbajit.lapoflap3d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)   
+        if stencil_name == "lapoflap3d":
+            numba_vector_laplap= numba.njit(stencils_numpy.lapoflap2d,parallel=parallel_opt)
+            numba_vector_laplap(in_field, tmp_field, tmp_field, num_halo=2, extend=1)  
     
-    if backend == "numbajit_inplace":
-        if stencil_name == "laplacian1d":
-            stencil = njit(stencils_numpy.laplacian1d)#, parallel=False, cache=False, fastmath=False)
-            stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
-        if stencil_name == "laplacian2d":
-            stencil = njit(stencils_numpy.laplacian2d)
-            stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
-        if stencil_name == "laplacian3d":
-            stencil = njit(stencils_numpy.laplacian3d,)
-            stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
-        if stencil_name == "FMA":
-            stencil = njit(stencils_numpy.FMA)
-            stencil(in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)    
+    # if backend == "numbajit_inplace":
+    #     if stencil_name == "laplacian1d":
+    #         stencil = njit(stencils_numpy.laplacian1d)#, parallel=False, cache=False, fastmath=False)
+    #         stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+    #     if stencil_name == "laplacian2d":
+    #         stencil = njit(stencils_numpy.laplacian2d)
+    #         stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+    #     if stencil_name == "laplacian3d":
+    #         stencil = njit(stencils_numpy.laplacian3d,)
+    #         stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+    #     if stencil_name == "FMA":
+    #         stencil = njit(stencils_numpy.FMA)
+    #         stencil(in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)    
         
     if backend == "numbaloop":
         if stencil_name == "laplacian1d":
@@ -329,6 +350,7 @@ def main(
         #    laplacian1d_numbavectorize( in_field)
         
 
+#----
     # time the actual work
     # Call the stencil chosen in stencil_name
     time_list = []
@@ -366,6 +388,7 @@ def main(
                 toc = time.time()
 
             if stencil_name == "lapoflap2d":
+                
                 tic = time.time()
                 out_field = stencils_numpy.lapoflap2d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
                 toc = time.time()
@@ -375,32 +398,44 @@ def main(
                 out_field = stencils_numpy.lapoflap3d(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
                 toc = time.time()
                 
-        if backend == "numbajit":
+        if backend == "numba_vector_function":
             if stencil_name == "test":
                 tic = time.time()
-                out_field = stencils_numbajit.test(in_field)
+                out_field = numba_vector_test(in_field)
                 toc = time.time()
             
-            if stencil_name == "laplacian1d":
+            if (stencil_name == "laplacian1d") or (stencil_name == "laplacian2d") or (stencil_name == "laplacian3d"):
                 tic = time.time()
-                out_field = stencils_numbajit.laplacian1d(in_field, tmp_field, num_halo=num_halo, extend=0)
+                out_field = numba_vector_laplacian(in_field, tmp_field, num_halo=num_halo, extend=0)
                 toc = time.time()
-
-            if stencil_name == "laplacian2d":
-                tic = time.time()
-                out_field = stencils_numbajit.laplacian2d(in_field, tmp_field, num_halo=num_halo, extend=0)
-                toc = time.time()
-
-            if stencil_name == "laplacian3d":
-                tic = time.time()
-                out_field = stencils_numbajit.laplacian3d(in_field, tmp_field, num_halo=num_halo, extend=0)
-                toc = time.time()
-                
+            
             if stencil_name == "FMA":
+                 tic = time.time()
+                 out_field = numba_vector_FMA(
+                     in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)
+                 toc = time.time()
+                 
+            if (stencil_name == "lapoflap1d") or (stencil_name == "lapoflap2d") or (stencil_name == "lapoflap3d"):
                 tic = time.time()
-                out_field = stencils_numbajit.FMA(
-                    in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)
+                out_field = numba_vector_laplap(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
                 toc = time.time()
+            
+
+            # if stencil_name == "laplacian2d":
+            #     tic = time.time()
+            #     out_field = stencils_numbajit.laplacian2d(in_field, tmp_field, num_halo=num_halo, extend=0)
+            #     toc = time.time()
+
+            # if stencil_name == "laplacian3d":
+            #     tic = time.time()
+            #     out_field = stencils_numbajit.laplacian3d(in_field, tmp_field, num_halo=num_halo, extend=0)
+            #     toc = time.time()
+                
+            # if stencil_name == "FMA":
+            #     tic = time.time()
+            #     out_field = stencils_numbajit.FMA(
+            #         in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)
+               # toc = time.time()
                 
 #             if stencil_name == "lapoflap1d":
 #                 tic = time.time()

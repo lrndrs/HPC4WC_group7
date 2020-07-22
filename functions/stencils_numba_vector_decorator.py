@@ -5,7 +5,7 @@
 # ******************************************************
 
 import numpy as np
-from numba import jit, njit
+#from numba import jit, njit
 
 #@njit()
 #def njit_
@@ -17,7 +17,7 @@ from numba import jit, njit
 #def njit_python
 
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def test(in_field):
     """
     Simple test function that returns a copy of the in_field.
@@ -35,7 +35,7 @@ def test(in_field):
 
     return tmp_field
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def laplacian1d(in_field, tmp_field, num_halo=1, extend=0):
     """
     Compute Laplacian in i-direction using 2nd-order centered differences.
@@ -64,7 +64,7 @@ def laplacian1d(in_field, tmp_field, num_halo=1, extend=0):
 
     return tmp_field
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def laplacian2d(in_field, tmp_field, num_halo=1, extend=0):
     """
     Compute Laplacian in i- and j-direction using 2nd-order centered differences.
@@ -97,7 +97,7 @@ def laplacian2d(in_field, tmp_field, num_halo=1, extend=0):
 
     return tmp_field
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def laplacian3d(in_field, tmp_field, num_halo=1, extend=0):
     """
     Compute Laplacian in i-, j- and k-direction using 2nd-order centered differences.
@@ -134,7 +134,7 @@ def laplacian3d(in_field, tmp_field, num_halo=1, extend=0):
 
     return tmp_field
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def FMA(in_field, in_field2, in_field3, tmp_field, num_halo=0, extend=0):
     """
     Pointwise stencil to test for fused multiply-add 

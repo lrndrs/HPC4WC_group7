@@ -164,7 +164,7 @@ def lapoflap1d(in_field, tmp_field, tmp2_field, num_halo=2, extend=1):
     tmp_field[ib:ie, :, :] = (
         -2.0 * in_field[ib:ie, :, :]
         + in_field[ib - 1 : ie - 1, :, :]
-        + in_field[ib + 1 : ie + 1 if ie != -1 else None, :, :]
+        + in_field[ib + 1 :, :, :]
     )
 
     extend = 0
@@ -173,7 +173,7 @@ def lapoflap1d(in_field, tmp_field, tmp2_field, num_halo=2, extend=1):
     tmp2_field[ib:ie, :, :] = (
         -2.0 * tmp_field[ib:ie, :, :]
         + tmp_field[ib - 1 : ie - 1, :, :]
-        + tmp_field[ib + 1 : ie + 1 if ie != -1 else None, :, :]
+        + tmp_field[ib + 1 : ie + 1, :, :]
     )
 
     return tmp2_field
@@ -196,16 +196,16 @@ def lapoflap2d(in_field, tmp_field, tmp2_field, num_halo=2, extend=1):
     tmp2_field  : in_field with Laplacian of the Laplacian computed in i- and j-direction (horizontally).
     
     """
-    ib = num_halo - extend
-    ie = -num_halo + extend
-    jb = num_halo - extend
-    je = -num_halo + extend
+    ib = num_halo - extend #1
+    ie = -num_halo + extend #-1
+    jb = num_halo - extend #1
+    je = -num_halo + extend #-1
     tmp_field[ib:ie, jb:je, :] = (
         -4.0 * in_field[ib:ie, jb:je, :]
         + in_field[ib - 1 : ie - 1, jb:je, :]
-        + in_field[ib + 1 : ie + 1 if ie != -1 else None, jb:je, :]
+        + in_field[ib + 1 : , jb:je, :]
         + in_field[ib:ie, jb - 1 : je - 1, :]
-        + in_field[ib:ie, jb + 1 : je + 1 if je != -1 else None, :]
+        + in_field[ib:ie, jb + 1 : , :]
     )
 
     extend = 0
@@ -216,9 +216,9 @@ def lapoflap2d(in_field, tmp_field, tmp2_field, num_halo=2, extend=1):
     tmp2_field[ib:ie, jb:je, :] = (
         -4.0 * tmp_field[ib:ie, jb:je, :]
         + tmp_field[ib - 1 : ie - 1, jb:je, :]
-        + tmp_field[ib + 1 : ie + 1 if ie != -1 else None, jb:je, :]
+        + tmp_field[ib + 1 : -1, jb:je, :]
         + tmp_field[ib:ie, jb - 1 : je - 1, :]
-        + tmp_field[ib:ie, jb + 1 : je + 1 if je != -1 else None, :]
+        + tmp_field[ib:ie, jb + 1 : -1, :]
     )
 
     return tmp2_field
@@ -251,11 +251,11 @@ def lapoflap3d(in_field, tmp_field, tmp2_field, num_halo=2, extend=1):
     tmp_field[ib:ie, jb:je, kb:ke] = (
         -6.0 * in_field[ib:ie, jb:je, kb:ke]
         + in_field[ib - 1 : ie - 1, jb:je, kb:ke]
-        + in_field[ib + 1 : ie + 1 if ie != -1 else None, jb:je, kb:ke]
+        + in_field[ib + 1 : , jb:je, kb:ke]
         + in_field[ib:ie, jb - 1 : je - 1, kb:ke]
-        + in_field[ib:ie, jb + 1 : je + 1 if je != -1 else None, kb:ke]
+        + in_field[ib:ie, jb + 1 : , kb:ke]
         + in_field[ib:ie, jb:je, kb - 1 : ke - 1]
-        + in_field[ib:ie, jb:je, kb + 1 : ke + 1 if ke != -1 else None]
+        + in_field[ib:ie, jb:je, kb + 1 : ]
     )
 
     extend = 0
@@ -269,11 +269,11 @@ def lapoflap3d(in_field, tmp_field, tmp2_field, num_halo=2, extend=1):
     tmp2_field[ib:ie, jb:je, kb:ke] = (
         -6.0 * tmp_field[ib:ie, jb:je, kb:ke]
         + tmp_field[ib - 1 : ie - 1, jb:je, kb:ke]
-        + tmp_field[ib + 1 : ie + 1 if ie != -1 else None, jb:je, kb:ke]
+        + tmp_field[ib + 1 : -1, jb:je, kb:ke]
         + tmp_field[ib:ie, jb - 1 : je - 1, kb:ke]
-        + tmp_field[ib:ie, jb + 1 : je + 1 if je != -1 else None, kb:ke]
+        + tmp_field[ib:ie, jb + 1 : -1, kb:ke]
         + tmp_field[ib:ie, jb:je, kb - 1 : ke - 1]
-        + tmp_field[ib:ie, jb:je, kb + 1 : ke + 1 if ke != -1 else None]
+        + tmp_field[ib:ie, jb:je, kb + 1 : -1]
     )
 
     return tmp2_field
