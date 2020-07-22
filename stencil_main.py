@@ -25,8 +25,6 @@ from functions import field_validation
 #     validate_outfield,
 # )
 from functions import serialization
-    #evaluate.add_data
-    #evaluate.save_runtime_as_df
     
 from functions import stencils_numpy
     #(
@@ -40,13 +38,8 @@ from functions import stencils_numpy
     #stencils_numpy.lapoflap3d,
 #)
 from functions import stencils_numba_vector_decorator
-
 from functions import stencils_numba_loop
-#(
-#    laplacian1d,    
-#    laplacian2d,
-#    laplacian3d,
-#) 
+
 from functions import stencils_numba_stencil 
 #(
 #    laplacian1d,
@@ -63,15 +56,12 @@ from functions import stencils_numbavectorize
 
 from functions.halo_functions import update_halo, add_halo_points, remove_halo_points
 
-# from functions.gt4py_numpy import test_gt4py
-# import gt4py
-# import gt4py.gtscript as gtscript
-# import gt4py.storage as gt_storage
 
-# from functions.create_field import get_random_field
-# from functions.update_halo import update_halo
-# from functions.add_halo_points import add_halo_points
-# from functions.remove_halo_points import remove_halo_points
+from functions.gt4py_numpy import test_gt4py
+import gt4py
+import gt4py.gtscript as gtscript
+import gt4py.storage as gt_storage
+
 
 
 @click.command()
@@ -95,7 +85,7 @@ from functions.halo_functions import update_halo, add_halo_points, remove_halo_p
     "--backend",
     type=str,
     required=True,
-    help='Options are ["numpy", "numbajit", "numbajit_inplace", numbaloop", "numbastencil", "numbavectorize", "gt4py"]',
+    help='Options are ["numpy", "numba_vector_function", "numba_vector_decorator", numba_loop", "numba_stencil", "numbavectorize", "gt4py"]',
 )
 @click.option(
     "--num_halo",
@@ -141,7 +131,18 @@ from functions.halo_functions import update_halo, add_halo_points, remove_halo_p
     help="Save the individual runtimes into a df.",
 )
 
-@click.option('--backend_opts', type=(str, bool),default=('parallel',True))
+@click.option(
+    "--numba_parallel",
+    type=bool,
+    default=False,
+    help="True to enable parallel execution of Numba stencils.",
+)
+@click.option(
+    "--gt4py_backend",
+    type=str,
+    default="numpy",
+    help="GT4Py backend. Options are: numpy, gtx86, gtmc, gtcuda.",
+)
 
 
 def main(
@@ -157,9 +158,10 @@ def main(
     field_name="test",
     df_name="df",
     save_runtime=False,
-    backend_opts=('parallel',True)
+    numba_parallel=False,
+    gt4py_backend="numpy"
 ):
-    """Driver for high-level comparison of stencil computation. HPC4WC group 7 coursework."""
+    """Driver for high-level comparison of stencil computation in python."""
 
     assert 0 < nx <= 1024 * 1024, "You have to specify a reasonable value for nx"
     assert 0 < ny <= 1024 * 1024, "You have to specify a reasonable value for ny"
@@ -204,7 +206,7 @@ def main(
     if create_field == True:
         in_field = field_validation.create_new_infield(nx, ny, nz,field_name)
     
-    if create_field == False:
+    else:
         in_field = field_validation.create_val_infield(nx, ny, nz,field_name)
     
 
@@ -226,10 +228,6 @@ def main(
     tmp_field = np.empty_like(in_field)
 
 #----
-    #This could still be more elegant: choosing the backend_options!
-    if (backend_opts[0]=='parallel'):
-        parallel_opt=backend_opts[1]
-
     # warmup caches
     if backend == "numpy":
         if stencil_name == "test":
@@ -258,35 +256,35 @@ def main(
     
     if backend == "numba_vector_function":            
         if stencil_name == "test":
-            numba_vector_test = numba.njit(stencils_numpy.test,parallel=parallel_opt)
+            numba_vector_test = numba.njit(stencils_numpy.test,parallel=numba_parallel)
             numba_vector_test(in_field)
 
         if stencil_name == "laplacian1d":
-            numba_vector_laplacian=numba.njit(stencils_numpy.laplacian1d,parallel=parallel_opt)
+            numba_vector_laplacian=numba.njit(stencils_numpy.laplacian1d,parallel=numba_parallel)
             numba_vector_laplacian(in_field, tmp_field, num_halo=num_halo, extend=0)
 
         if stencil_name == "laplacian2d":
-            numba_vector_laplacian=numba.njit(stencils_numpy.laplacian2d,parallel=parallel_opt)
+            numba_vector_laplacian=numba.njit(stencils_numpy.laplacian2d,parallel=numba_parallel)
             numba_vector_laplacian(in_field, tmp_field, num_halo=num_halo, extend=0)
 
         if stencil_name == "laplacian3d":
-            numba_vector_laplacian=numba.njit(stencils_numpy.laplacian3d,parallel=parallel_opt)
+            numba_vector_laplacian=numba.njit(stencils_numpy.laplacian3d,parallel=numba_parallel)
             numba_vector_laplacian(in_field, tmp_field, num_halo=num_halo, extend=0)
             
         if stencil_name == "FMA":
-            numba_vector_FMA = numba.njit(stencils_numpy.FMA,parallel=parallel_opt)
+            numba_vector_FMA = numba.njit(stencils_numpy.FMA,parallel=numba_parallel)
             numba_vector_FMA(in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0)  
         
         if stencil_name == "lapoflap1d":
-            numba_vector_laplap= numba.njit(stencils_numpy.lapoflap1d,parallel=parallel_opt)
+            numba_vector_laplap= numba.njit(stencils_numpy.lapoflap1d,parallel=numba_parallel)
             numba_vector_laplap(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
 
         if stencil_name == "lapoflap2d":
-            numba_vector_laplap= numba.njit(stencils_numpy.lapoflap2d,parallel=parallel_opt)
+            numba_vector_laplap= numba.njit(stencils_numpy.lapoflap2d,parallel=numba_parallel)
             numba_vector_laplap(in_field, tmp_field, tmp_field, num_halo=2, extend=1)
 
         if stencil_name == "lapoflap3d":
-            numba_vector_laplap= numba.njit(stencils_numpy.lapoflap2d,parallel=parallel_opt)
+            numba_vector_laplap= numba.njit(stencils_numpy.lapoflap2d,parallel=numba_parallel)
             numba_vector_laplap(in_field, tmp_field, tmp_field, num_halo=2, extend=1)  
     
     if backend == "numba_vector_decorator":
@@ -316,48 +314,48 @@ def main(
      
     if backend == "numba_loop":
         if stencil_name == "test":
-            numba_loop_test = numba.njit(stencils_numba_loop.test,parallel=parallel_opt)
+            numba_loop_test = numba.njit(stencils_numba_loop.test,parallel=numba_parallel)
             numba_loop_test(in_field)
 
         if stencil_name == "laplacian1d":
-            numba_loop_laplacian=numba.njit(stencils_numba_loop.laplacian1d,parallel=parallel_opt)
+            numba_loop_laplacian=numba.njit(stencils_numba_loop.laplacian1d,parallel=numba_parallel)
             numba_loop_laplacian(in_field, tmp_field)
 
         if stencil_name == "laplacian2d":
-            numba_loop_laplacian=numba.njit(stencils_numba_loop.laplacian2d,parallel=parallel_opt)
+            numba_loop_laplacian=numba.njit(stencils_numba_loop.laplacian2d,parallel=numba_parallel)
             numba_loop_laplacian(in_field, tmp_field)
 
         if stencil_name == "laplacian3d":
-            numba_loop_laplacian=numba.njit(stencils_numba_loop.laplacian3d,parallel=parallel_opt)
+            numba_loop_laplacian=numba.njit(stencils_numba_loop.laplacian3d,parallel=numba_parallel)
             numba_loop_laplacian(in_field, tmp_field)
             
         if stencil_name == "FMA":
-            numba_loop_FMA = numba.njit(stencils_numba_loop.FMA,parallel=parallel_opt)
+            numba_loop_FMA = numba.njit(stencils_numba_loop.FMA,parallel=numba_parallel)
             numba_loop_FMA(in_field, in_field2, in_field3, tmp_field)  
             print('WARNING: Numba_loop has no effect on FMA.')
         
         if stencil_name == "lapoflap1d":
-            numba_loop_laplap= numba.njit(stencils_numba_loop.lapoflap1d,parallel=parallel_opt)
+            numba_loop_laplap= numba.njit(stencils_numba_loop.lapoflap1d,parallel=numba_parallel)
             numba_loop_laplap(in_field, tmp_field, tmp_field)
 
         if stencil_name == "lapoflap2d":
-            numba_loop_laplap= numba.njit(stencils_numba_loop.lapoflap2d,parallel=parallel_opt)
+            numba_loop_laplap= numba.njit(stencils_numba_loop.lapoflap2d,parallel=numba_parallel)
             numba_loop_laplap(in_field, tmp_field, tmp_field)
 
         if stencil_name == "lapoflap3d":
-            numba_loop_laplap= numba.njit(stencils_numba_loop.lapoflap2d,parallel=parallel_opt)
+            numba_loop_laplap= numba.njit(stencils_numba_loop.lapoflap2d,parallel=numba_parallel)
             numba_loop_laplap(in_field, tmp_field, tmp_field) 
 
     if backend == "numba_stencil":
 
         if stencil_name == "laplacian1d":
-            stencils_numbastencil.laplacian1d(in_field)
+            stencils_numba_stencil.laplacian1d(in_field)
 
         if stencil_name == "laplacian2d":
-            stencils_numbastencil.laplacian2d(in_field)
+            stencils_numba_stencil.laplacian2d(in_field)
 
         if stencil_name == "laplacian3d":
-            stencils_numbastencil.laplacian3d(in_field)
+            stencils_numba_stencil.laplacian3d(in_field)
             
     # if backend == "numbavectorize":
 
@@ -637,7 +635,7 @@ def main(
         print('Runtime development saved in dataframe.')
         
     # Append row with calculated work to df 
-    serialization.add_data(df_name, stencil_name, backend, nx, ny, nz, valid_var, field_name, num_iter, time_total, time_avg, time_stdev, time_avg_first_10, time_avg_last_10)
+    serialization.add_data(df_name, stencil_name, backend,numba_parallel,gt4py_backend, nx, ny, nz, valid_var, field_name, num_iter, time_total, time_avg, time_stdev, time_avg_first_10, time_avg_last_10)
 
     if plot_result:
         plt.imshow(out_field[out_field.shape[0] // 2, :, :], origin="lower")
