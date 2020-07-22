@@ -2,6 +2,8 @@
 # Functions for Field validation
 # ******************************************************
 
+import numpy as np
+import os.path
 
 
 def create_new_infield(nx, ny, nz,field_name):

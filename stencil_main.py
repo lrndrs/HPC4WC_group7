@@ -10,7 +10,8 @@ import numpy as np
 import click
 import matplotlib
 import sys
-import os.path
+#import os.path
+#import pandas as pd
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -22,7 +23,10 @@ from functions.field_validation import (
     save_newoutfield,
     validate_outfield,
 )
-from functions.performance_report import new_reportfile, append_row
+from functions import evaluate
+    #evaluate.add_data
+    #evaluate.runtimedevelopment
+    
 from functions import stencils_numpy
     #(
     #stencils_numpy.test,
@@ -62,10 +66,10 @@ from functions import stencils_numbavectorize
 
 from functions.halo_functions import update_halo, add_halo_points, remove_halo_points
 from numba import jit, njit
-from functions.gt4py_numpy import test_gt4py
-import gt4py
-import gt4py.gtscript as gtscript
-import gt4py.storage as gt_storage
+# from functions.gt4py_numpy import test_gt4py
+# import gt4py
+# import gt4py.gtscript as gtscript
+# import gt4py.storage as gt_storage
 
 # from functions.create_field import get_random_field
 # from functions.update_halo import update_halo
@@ -83,9 +87,7 @@ import gt4py.storage as gt_storage
 @click.option(
     "--nz", type=int, required=True, help="Number of gridpoints in z-direction"
 )
-@click.option(
-    "--num_iter", type=int, required=False, default=1, help="Number of iterations"
-)
+
 @click.option(
     "--stencil_name",
     type=str,
@@ -115,36 +117,45 @@ import gt4py.storage as gt_storage
 )
 
 @click.option(
+    "--num_iter",
+    type=int,
+    default=1,
+    help="Number of iterations",
+)
+
+
+@click.option(
     "--field_name",
     type=str,
     default="test",
-    help="Name the testfield, that will be created or from which will be validated. File ending is added automatically.",
+    help="Name of the testfield, that will be created or from which will be validated. File ending is added automatically.",
 )
 @click.option(
-    "--create_newreport",
-    type=bool,
-    default=True,
-    help="Create a new report if a new field is generated (True/False)",
-)
-@click.option(
-    "--report_name",
+    "--df_name",
     type=str,
-    default="performance_report.csv",
-    help="Specify a name for the csv performance report",
+    default="df",
+    help="Name of evaluation dataframe. A new name creates a new df, the same name adds a column to the already existing df.",
+)
+
+@click.option(
+    "--save_runtime",
+    type=bool,
+    default=False,
+    help="Save the individual runtimes into a df.",
 )
 def main(
     nx,
     ny,
     nz,
-    num_iter,
     backend,
     stencil_name,
+    num_iter=1,
     num_halo=2,
     plot_result=False,
     create_field=True,
     field_name="test",
-    create_newreport=True,
-    report_name="performance_report.csv",
+    df_name="df",
+    save_runtime=False
 ):
     """Driver for high-level comparison of stencil computation. HPC4WC group 7 coursework."""
 
@@ -184,18 +195,16 @@ def main(
             )
         )
         sys.exit(0)
-    alpha = 1.0 / 32.0
-    dim = 3
-
+    #alpha = 1.0 / 32.0
+    #dim = 3
 
     # create field for validation
     if create_field == True:
         in_field = create_new_infield(nx, ny, nz,field_name)
-    if create_newreport:
-            new_reportfile(report_name)
-
+    
     if create_field == False:
         in_field = create_val_infield(nx, ny, nz,field_name)
+    
 
     # np.save('in_field', in_field)
     if plot_result:
@@ -492,25 +501,35 @@ def main(
                 tic = time.time()
                 test_gt4py(in_storage, out_storage, coeff_storage)
                 toc = time.time()
-
+    
+    
         time_list.append(toc - tic)
+    
+     
+    time_avg = np.average(time_list)
+    time_stdev = np.std(time_list)
+    time_total = sum(time_list)
 
-
-    time_avg = sum(time_list) / len(time_list)
+    
+    
     print(
-        "In {} iterations the average lapsed time for work is {} s".format(
-            num_iter, time_avg
+        "Total worktime: {} s. In {} iteration(s) the average lapsed time for one run is {} +/- {} s".format(
+            time_total, num_iter, time_avg,time_stdev
         )
     )
 
     if num_iter >= 20:
-        time_avg_first_10 = sum(time_list[0:10]) / len(time_list[0:10])
-        time_avg_last_10 = sum(time_list[-11:-1]) / len(time_list[-11:-1])
+        time_avg_first_10 = sum(time_list[0:10]) / 10
+        time_avg_last_10 = sum(time_list[-11:-1]) / 10
         print(
-            "The average elaped time of the first 10 values is {} and of the last 10 values is {}".format(
+            "The average elapsed time of the first 10 run is {} and of the last 10 values is {}".format(
                 time_avg_first_10, time_avg_last_10
             )
         )
+    else :
+        time_avg_first_10 = np.nan
+        time_avg_last_10 = np.nan
+        
 
     # delete halo from out_field
     out_field = remove_halo_points(out_field, num_halo)
@@ -523,9 +542,14 @@ def main(
     if create_field == False:
         valid_var = validate_outfield(out_field,field_name)
         # TODO: Save Elapsed Work Time in table for validation mode
-
-    # Append row with calculated work to report
-    append_row(report_name, stencil_name, backend, nx, ny, nz, time_avg, valid_var)
+    
+    # Save individual runtimes
+    if save_runtime:
+        evaluate.runtimedevelopment(time_list)
+        print('Runtime development saved in dataframe.')
+        
+    # Append row with calculated work to df 
+    evaluate.add_data(df_name, stencil_name, backend, nx, ny, nz, valid_var, field_name, num_iter, time_total, time_avg, time_stdev, time_avg_first_10, time_avg_last_10)
 
     if plot_result:
         plt.imshow(out_field[out_field.shape[0] // 2, :, :], origin="lower")
