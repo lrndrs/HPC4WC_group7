@@ -19,8 +19,7 @@ def laplacian1d_numbastencil_help(in_field):
     return -2.0 * in_field[0, 0, 0] + in_field[-1, 0, 0] + in_field[+1, 0, 0]
 
 
-@njit()
-def laplacian1d(in_field):
+def laplacian1d(in_field, out_field):
     """
     Function that boosts the function laplacian1d_numbastencil_help
     
@@ -32,7 +31,7 @@ def laplacian1d(in_field):
     -------
     
     """
-    return laplacian1d_numbastencil_help(in_field)
+    return laplacian1d_numbastencil_help(in_field, out=out_field)
 
 
 @stencil
@@ -57,8 +56,7 @@ def laplacian2d_numbastencil_help(in_field):
     )
 
 
-@njit()
-def laplacian2d(in_field):
+def laplacian2d(in_field, out_field):
     """
     Function that boosts the function laplacian2d_numbastencil_help
     
@@ -70,7 +68,7 @@ def laplacian2d(in_field):
     -------
     
     """
-    return laplacian2d_numbastencil_help(in_field)
+    return laplacian2d_numbastencil_help(in_field, out=out_field)
 
 
 @stencil
@@ -97,8 +95,7 @@ def laplacian3d_numbastencil_help(in_field):
     )
 
 
-@njit()
-def laplacian3d(in_field):
+def laplacian3d(in_field, out_field):
     """
     Function that boosts the function laplacian3d_numbastencil_help
     
@@ -110,4 +107,4 @@ def laplacian3d(in_field):
     -------
     
     """
-    return laplacian3d_numbastencil_help(in_field)
+    return laplacian3d_numbastencil_help(in_field, out=out_field)
