@@ -42,7 +42,7 @@ def add_data(
     df.to_pickle("eval/{}_result.pkl".format(df_name))
     
 
-def runtimedevelopment(time_list):
+def save_runtime_as_df(time_list):
     """
     
 

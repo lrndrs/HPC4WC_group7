@@ -10,22 +10,22 @@ import numpy as np
 import click
 import matplotlib
 import sys
-#import os.path
-#import pandas as pd
+
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-from functions.field_validation import (
-    create_new_infield,
-    create_val_infield,
-    save_newoutfield,
-    validate_outfield,
-)
-from functions import evaluate
+from functions import field_validation 
+#     (
+#     create_new_infield,
+#     create_val_infield,
+#     save_new_outfield,
+#     validate_outfield,
+# )
+from functions import serialization
     #evaluate.add_data
-    #evaluate.runtimedevelopment
+    #evaluate.save_runtime_as_df
     
 from functions import stencils_numpy
     #(
@@ -65,7 +65,7 @@ from functions import stencils_numbavectorize
 #)  # , laplacian1d_numbavectorize
 
 from functions.halo_functions import update_halo, add_halo_points, remove_halo_points
-from numba import jit, njit
+#from numba import jit, njit
 # from functions.gt4py_numpy import test_gt4py
 # import gt4py
 # import gt4py.gtscript as gtscript
@@ -200,10 +200,10 @@ def main(
 
     # create field for validation
     if create_field == True:
-        in_field = create_new_infield(nx, ny, nz,field_name)
+        in_field = field_validation.create_new_infield(nx, ny, nz,field_name)
     
     if create_field == False:
-        in_field = create_val_infield(nx, ny, nz,field_name)
+        in_field = field_validation.create_val_infield(nx, ny, nz,field_name)
     
 
     # np.save('in_field', in_field)
@@ -536,20 +536,20 @@ def main(
 
     # Save or validate Outfield
     if create_field == True:
-        save_newoutfield(out_field,field_name)
+        field_validation.save_new_outfield(out_field,field_name)
         valid_var = "-"
 
     if create_field == False:
-        valid_var = validate_outfield(out_field,field_name)
+        valid_var = field_validation.validate_outfield(out_field,field_name)
         # TODO: Save Elapsed Work Time in table for validation mode
     
     # Save individual runtimes
     if save_runtime:
-        evaluate.runtimedevelopment(time_list)
+        serialization.save_runtime_as_df(time_list)
         print('Runtime development saved in dataframe.')
         
     # Append row with calculated work to df 
-    evaluate.add_data(df_name, stencil_name, backend, nx, ny, nz, valid_var, field_name, num_iter, time_total, time_avg, time_stdev, time_avg_first_10, time_avg_last_10)
+    serialization.add_data(df_name, stencil_name, backend, nx, ny, nz, valid_var, field_name, num_iter, time_total, time_avg, time_stdev, time_avg_first_10, time_avg_last_10)
 
     if plot_result:
         plt.imshow(out_field[out_field.shape[0] // 2, :, :], origin="lower")

@@ -60,7 +60,7 @@ def create_val_infield(nx, ny, nz,field_name):
     return testfield
 
 
-def save_newoutfield(out_field,field_name):
+def save_new_outfield(out_field,field_name):
     """
     Saves a new Out field to a .npy file.
 
@@ -98,7 +98,7 @@ def validate_outfield(out_field,field_name):
     
     testfield = np.load("testfields/{}_outfield.npy".format(field_name))
 
-    valid_var = np.all(np.equal(testfield, out_field))
+    valid_var = np.all(np.allclose(testfield, out_field))
     print("Result of field validation is:", valid_var)
 
     return valid_var
