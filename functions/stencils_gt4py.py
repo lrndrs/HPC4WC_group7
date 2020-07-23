@@ -97,7 +97,7 @@ def lapoflap2d_gt4py(
             + in_field[0, 1, 0]
         ) 
         
-        tout_field[0,0,0] = (
+        out_field[0,0,0] = (
             -4.0 * tmp_field[0,0,0] 
             + tmp_field[-1, 0, 0] 
             + tmp_field[1, 0, 0]
