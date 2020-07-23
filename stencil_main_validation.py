@@ -191,6 +191,9 @@ def main(
         in_field2 = gt4py.storage.from_array( 
             in_field2, gt4py_backend, default_origin = origin 
         ) 
+        in_field3 = gt4py.storage.from_array( 
+            in_field3, gt4py_backend, default_origin = origin 
+        ) 
         out_field = gt4py.storage.from_array( 
             out_field, gt4py_backend, default_origin = origin 
         ) 
