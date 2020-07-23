@@ -78,7 +78,7 @@ def save_new_outfield(out_field,field_name):
     print("New output field {} saved.".format(field_name))
 
 
-def validate_outfield(out_field,field_name):
+def validate_outfield(out_field,field_name,stencil_name,backend):
     """
     Reads in the original file and compares it to the current out-field. Validates the results of the stencil computation
 
@@ -99,6 +99,6 @@ def validate_outfield(out_field,field_name):
     testfield = np.load("testfields/{}_outfield.npy".format(field_name))
 
     valid_var = np.all(np.allclose(testfield, out_field))
-    print("Result of field validation is:", valid_var)
+    print("Field validation for stencil {} in backend {} is: {}.".format(stencil_name, backend, valid_var))
 
     return valid_var

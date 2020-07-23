@@ -5,40 +5,31 @@ Numba (http://numba.pydata.org/
 https://nyu-cds.github.io/python-numba/
 https://www.youtube.com/watch?v=x58W9A2lnQc 
 
-### Setup environment:
+## Setup environment:
 - open the console
 - which python --> prints the current environment
 - source HPC4WC_venv/bin/activate --> loads the correct environment
 - check again with which python, if it worked
 
-### Run stencil_main.py
-- move to its folder
-- run with:
-python3 stencil_main.py --dim_stencil 3 --nx 10 --ny 10 --nz 10 --num_iter 100 --stencil_name test
+## Run stencil_main.py
+- move to its folder and execute directly in console
+- or use the EvaluationNotebook.ipynb Jupyternotebook
 
-For help about available options type: 
-python3 stencil_main.py --help
+#### Validation
+- run stencil_main_validation:
+python3 stencil_main_validation.py --nx 32 --ny 32 --nz 32 --stencil_name lapoflap1d --backend numba_vector_function --create_field True
 
-
-
-### Validation and performance report options
 - Set the option create_field = True (Default) to create a new random field that is saved as a .npy file.
 - Set then the option create_field to False to validate the out fields of different stencils to the original numpy field.
-- With each new field automatically a new csv-report is generated, where the properties of the run and the elapsed work time is summed up as a table.
-- Further validation runs are added as a row to the already generated performance report.
-- If the field shapes of the original and the control file are not equal, the program stops. To generate however a report with stencils of different field sizes and no validation set the option create_newreport to False. 
 
-Example for validation:
-python3 stencil_main.py --nx 10 --ny 10 --nz 10 --num_iter 100 --backend numpy --stencil_name laplacian1d --create_field False
+#### Performance
+- run stencil_main_performance:
+python3 stencil_main_performance.py --nx 32 --ny 32 --nz 32 --stencil_name lapoflap3d --backend numba_loop --num_iter 20
 
-
-
-### Next To Do's:
+#### Help
+For help about available options type: 
+python3 stencil_main_{}.py --help
 
 
-
-### Fragezeichen
-*Do we need the backup if the halos have the size 1 that the last value is not used for calculation? (yes for laplap?)
-then: how to implement this in numba?
 
   
