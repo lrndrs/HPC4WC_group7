@@ -57,10 +57,10 @@ from functions import stencils_numbavectorize
 from functions.halo_functions import update_halo, add_halo_points, remove_halo_points
 
 
-# from functions.gt4py_numpy import test_gt4py
-# import gt4py
-# import gt4py.gtscript as gtscript
-# import gt4py.storage as gt_storage
+from functions.gt4py_numpy import test_gt4py
+import gt4py
+import gt4py.gtscript as gtscript
+import gt4py.storage as gt_storage
 
 
 
