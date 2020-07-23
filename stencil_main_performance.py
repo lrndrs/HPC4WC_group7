@@ -11,6 +11,9 @@ import click
 import matplotlib
 import sys
 from numba import njit
+import gt4py #changed
+import gt4py.gtscript as gtscript #changed
+import gt4py.storage as gt_storage #changed
 
 
 # matplotlib.use("Agg")
@@ -29,7 +32,8 @@ from functions import serialization
 from functions import stencils_numpy
 from functions import stencils_numba_vector_decorator
 from functions import stencils_numba_loop
-from functions import stencils_numba_stencil 
+from functions import stencils_numba_stencil
+from functions import stencils_gt4py #changed
 
 
 from functions.halo_functions import update_halo, add_halo_points, remove_halo_points
@@ -149,6 +153,9 @@ def main(
             )
         )
         sys.exit(0)
+        
+    # TODO: Create check for gt4py_backend #changed
+    
     #alpha = 1.0 / 32.0
     #dim = 3
 
@@ -175,7 +182,7 @@ def main(
     #define value of num_halo
     if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
         num_halo = 1
-    elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
+    elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d", "test_gt4py"):
         num_halo = 2
     else: #FMA and test
         num_halo = 0
@@ -188,6 +195,21 @@ def main(
     in_field3 = np.ones_like(in_field) * 4.2
     tmp_field = np.empty_like(in_field)
     out_field = np.empty_like(in_field)
+    
+    # create fields for gt4py #changed
+    if backend == "gt4py": #changed
+        in_field = gt4py.storage.from_array( #changed
+            in_field, gt4py_backend, default_origin = (num_halo, num_halo, num_halo) #changed
+        ) #changed
+        tmp_field = gt4py.storage.from_array( #changed
+            tmp_field, gt4py_backend, default_origin = (num_halo, num_halo, num_halo) #changed
+        ) #changed
+        in_field2 = gt4py.storage.from_array( #changed
+            in_field2, gt4py_backend, default_origin = (num_halo, num_halo, num_halo) #changed
+        ) #changed
+        out_field = gt4py.storage.from_array( #changed
+            out_field, gt4py_backend, default_origin = (num_halo, num_halo, num_halo) #changed
+        ) #changed
         
     # import and possibly compile proper stencil object
     if backend == "numpy":
@@ -203,9 +225,9 @@ def main(
     elif backend == "numba_stencil":
         stencil = eval(f"stencils_numba_stencil.{stencil_name}")
         stencil = njit(stencil, parallel=numba_parallel)
-    # else:  # gt4py
-    #     stencil = eval(f"stencils_gt4py.{stencil_name}")
-    #     stencil = gt4py.gtscript.stencil(gt4py_backend, stencil)
+    else:  # gt4py  #changed
+        stencil = eval(f"stencils_gt4py.{stencil_name}") #changed
+        stencil = gt4py.gtscript.stencil(gt4py_backend, stencil) #changed
     
     #warm-up caches
     if backend in ("numpy", "numba_vector_function","numba_vector_decorator"):
@@ -231,7 +253,7 @@ def main(
         else: #Test
             stencil(in_field)
     
-    # else:  # gt4py
+    else:  # gt4py  #changed
     #     if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
     #         stencil(
     #             in_field,
@@ -249,13 +271,13 @@ def main(
     #             domain=(nx, ny, nz),
     #         )
     #     elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-    #         stencil(
-    #             in_field,
-    #             tmp_field,
-    #             out_field,
-    #             origin=(num_halo, num_halo, num_halo),
-    #             domain=(nx, ny, nz),
-    #         )
+        stencil( #changed
+        in_field, #changed
+        tmp_field, #changed
+        in_field2, #changed
+        origin=(num_halo, num_halo, num_halo), #changed
+        domain=(nx, ny, nz), #changed
+        ) #changed
     #     #else: test
         
         
@@ -305,8 +327,7 @@ def main(
                 out_field=stencil(in_field)
                 toc = time.time()
     
-        # else:  # gt4py
-        
+        else:  # gt4py #changed
             # if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
             #     tic = time.time()
             #     out_field=stencil(
@@ -328,15 +349,15 @@ def main(
             #     )
             #     toc = time.time()
             # elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-            #     tic = time.time()
-            #     out_field=stencil(
-            #         in_field,
-            #         tmp_field,
-            #         out_field,
-            #         origin=(num_halo, num_halo, num_halo),
-            #         domain=(nx, ny, nz),
-            #     )
-                # toc = time.time()
+            tic = time.time() #changed
+            out_field=stencil( #changed
+                in_field, #changed
+                tmp_field, #changed
+                in_field2, #changed
+                origin=(num_halo, num_halo, num_halo), #changed
+                domain=(nx, ny, nz), #changed
+            ) #changed
+            toc = time.time() #changed
         #else: test
         time_list.append(toc - tic)
     

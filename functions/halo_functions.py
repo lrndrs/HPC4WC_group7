@@ -59,43 +59,47 @@ def update_halo(field, num_halo):
     
     """
     dim = field.ndim
-    if dim == 3:
-        # bottom edge
-        field[:, 0:num_halo, num_halo:-num_halo] = field[
-            :, -2 * num_halo : -num_halo, num_halo:-num_halo
-        ]
+    
+    if num_halo==0:
+        field = field
+    else:
+        if dim == 3:
+            # bottom edge
+            field[:, 0:num_halo, num_halo:-num_halo] = field[
+                :, -2 * num_halo : -num_halo, num_halo:-num_halo
+            ]
 
-        # top edge
-        field[:, -num_halo:, num_halo:-num_halo] = field[
-            :, num_halo : 2 * num_halo, num_halo:-num_halo
-        ]
+            # top edge
+            field[:, -num_halo:, num_halo:-num_halo] = field[
+                :, num_halo : 2 * num_halo, num_halo:-num_halo
+            ]
 
-        # left edge
-        field[:, :, 0:num_halo] = field[:, :, -2 * num_halo : -num_halo]
+            # left edge
+            field[:, :, 0:num_halo] = field[:, :, -2 * num_halo : -num_halo]
 
-        # right edge
-        field[:, :, -num_halo:] = field[:, :, num_halo : 2 * num_halo]
+            # right edge
+            field[:, :, -num_halo:] = field[:, :, num_halo : 2 * num_halo]
 
-        # front edge
-        field[0:num_halo, :, :] = field[-2 * num_halo : -num_halo, :, :]
+            # front edge
+            field[0:num_halo, :, :] = field[-2 * num_halo : -num_halo, :, :]
 
-        # back edge
-        field[-num_halo:, :, :] = field[num_halo : 2 * num_halo, :, :]
-    if dim == 2:
-        # bottom edge
-        field[:, 0:num_halo] = field[:, -2 * num_halo : -num_halo]
-        # top edge
-        field[:, -num_halo:] = field[:, num_halo : 2 * num_halo]
-        # left edge
-        field[0:num_halo, :] = field[-2 * num_halo : -num_halo, :]
-        # right edge
-        field[-num_halo:, :] = field[num_halo : 2 * num_halo, :]
+            # back edge
+            field[-num_halo:, :, :] = field[num_halo : 2 * num_halo, :, :]
+        if dim == 2:
+            # bottom edge
+            field[:, 0:num_halo] = field[:, -2 * num_halo : -num_halo]
+            # top edge
+            field[:, -num_halo:] = field[:, num_halo : 2 * num_halo]
+            # left edge
+            field[0:num_halo, :] = field[-2 * num_halo : -num_halo, :]
+            # right edge
+            field[-num_halo:, :] = field[num_halo : 2 * num_halo, :]
 
-    if dim == 1:
-        # left edge
-        field[0:num_halo] = field[-2 * num_halo : -num_halo]
-        # right edge
-        field[-num_halo:] = field[num_halo : 2 * num_halo]
+        if dim == 1:
+            # left edge
+            field[0:num_halo] = field[-2 * num_halo : -num_halo]
+            # right edge
+            field[-num_halo:] = field[num_halo : 2 * num_halo]
     return field
 
 
