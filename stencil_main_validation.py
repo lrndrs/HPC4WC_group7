@@ -11,6 +11,9 @@ import click
 import matplotlib
 import sys
 from numba import njit
+import gt4py
+import gt4py.gtscript as gtscript
+import gt4py.storage as gt_storage
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -22,6 +25,7 @@ from functions import stencils_numpy
 from functions import stencils_numba_vector_decorator
 from functions import stencils_numba_loop
 from functions import stencils_numba_stencil 
+from functions import stencils_gt4py
 
 # from functions.gt4py_numpy import test_gt4py
 # import gt4py
@@ -130,6 +134,9 @@ def main(
             )
         )
         sys.exit(0)
+        
+    # TODO: Create check for gt4py_backend
+
     #alpha = 1.0 / 32.0
     #dim = 3
 
@@ -166,6 +173,28 @@ def main(
     tmp_field = np.empty_like(in_field)
     out_field = np.empty_like(in_field)
 
+    # create fields for gt4py
+    if backend == "gt4py": 
+        if stencil_name in ["test_gt4py","laplacian3d_gt4py"]:
+            origin = (num_halo, num_halo, num_halo)
+        elif stencil_name == "laplacian1d_gt4py":
+            origin = (num_halo, 0, 0)
+        elif stencil_name == "laplacian2d_gt4py":
+            origin = (num_halo, num_halo, 0)
+
+        in_field = gt4py.storage.from_array( 
+            in_field, gt4py_backend, default_origin = origin 
+        ) 
+        tmp_field = gt4py.storage.from_array( 
+            tmp_field, gt4py_backend, default_origin = origin 
+        ) 
+        in_field2 = gt4py.storage.from_array( 
+            in_field2, gt4py_backend, default_origin = origin 
+        ) 
+        out_field = gt4py.storage.from_array( 
+            out_field, gt4py_backend, default_origin = origin 
+        ) 
+
 #----
 
     # import and possibly compile proper stencil object
@@ -182,9 +211,9 @@ def main(
     elif backend == "numba_stencil":
         stencil = eval(f"stencils_numba_stencil.{stencil_name}")
         stencil = njit(stencil, parallel=numba_parallel)
-    # else:  # gt4py
-    #     stencil = eval(f"stencils_gt4py.{stencil_name}")
-    #     stencil = gt4py.gtscript.stencil(gt4py_backend, stencil)
+    else:  # gt4py  
+        stencil = eval(f"stencils_gt4py.{stencil_name}") 
+        stencil = gt4py.gtscript.stencil(gt4py_backend, stencil) 
     
     #warm-up caches (and run stencil computation one time)
     if backend in ("numpy", "numba_vector_function","numba_vector_decorator"):
@@ -210,7 +239,7 @@ def main(
         else: #Test
             stencil(in_field)
     
-    # else:  # gt4py
+    else:  # gt4py  
     #     if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
     #         stencil(
     #             in_field,
@@ -228,13 +257,13 @@ def main(
     #             domain=(nx, ny, nz),
     #         )
     #     elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-    #         stencil(
-    #             in_field,
-    #             tmp_field,
-    #             out_field,
-    #             origin=(num_halo, num_halo, num_halo),
-    #             domain=(nx, ny, nz),
-    #         )
+        stencil( 
+        in_field, 
+        tmp_field, 
+        in_field2, 
+        origin=origin, 
+        domain=(nx, ny, nz), 
+        ) 
     #     #else: test
         
 

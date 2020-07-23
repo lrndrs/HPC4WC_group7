@@ -11,9 +11,9 @@ import click
 import matplotlib
 import sys
 from numba import njit
-import gt4py #changed
-import gt4py.gtscript as gtscript #changed
-import gt4py.storage as gt_storage #changed
+import gt4py
+import gt4py.gtscript as gtscript
+import gt4py.storage as gt_storage
 
 
 # matplotlib.use("Agg")
@@ -33,8 +33,7 @@ from functions import stencils_numpy
 from functions import stencils_numba_vector_decorator
 from functions import stencils_numba_loop
 from functions import stencils_numba_stencil
-from functions import stencils_gt4py #changed
-
+from functions import stencils_gt4py
 
 from functions.halo_functions import update_halo, add_halo_points, remove_halo_points
 
@@ -61,7 +60,7 @@ from functions.halo_functions import update_halo, add_halo_points, remove_halo_p
     "--stencil_name",
     type=str,
     required=True,
-    help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","lapoflap1d", "lapoflap2d", "lapoflap3d", "test_gt4py"]',
+    help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","lapoflap1d", "lapoflap2d", "lapoflap3d", "test_gt4py", "laplacian1d_gt4py", "laplacian2d_gt4py", "laplacian3d_gt4py"]',
 )
 @click.option(
     "--backend",
@@ -136,6 +135,9 @@ def main(
         "lapoflap2d",
         "lapoflap3d",
         "test_gt4py",
+        "laplacian1d_gt4py",
+        "laplacian2d_gt4py", 
+        "laplacian3d_gt4py", 
     ]
     if stencil_name not in stencil_name_list:
         print(
@@ -154,7 +156,7 @@ def main(
         )
         sys.exit(0)
         
-    # TODO: Create check for gt4py_backend #changed
+    # TODO: Create check for gt4py_backend
     
     #alpha = 1.0 / 32.0
     #dim = 3
@@ -180,7 +182,7 @@ def main(
     # expand in_field to contain halo points
     
     #define value of num_halo
-    if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
+    if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d", "laplacian1d_gt4py", "laplacian2d_gt4py", "laplacian3d_gt4py"):
         num_halo = 1
     elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d", "test_gt4py"):
         num_halo = 2
@@ -196,20 +198,28 @@ def main(
     tmp_field = np.empty_like(in_field)
     out_field = np.empty_like(in_field)
     
-    # create fields for gt4py #changed
-    if backend == "gt4py": #changed
-        in_field = gt4py.storage.from_array( #changed
-            in_field, gt4py_backend, default_origin = (num_halo, num_halo, num_halo) #changed
-        ) #changed
-        tmp_field = gt4py.storage.from_array( #changed
-            tmp_field, gt4py_backend, default_origin = (num_halo, num_halo, num_halo) #changed
-        ) #changed
-        in_field2 = gt4py.storage.from_array( #changed
-            in_field2, gt4py_backend, default_origin = (num_halo, num_halo, num_halo) #changed
-        ) #changed
-        out_field = gt4py.storage.from_array( #changed
-            out_field, gt4py_backend, default_origin = (num_halo, num_halo, num_halo) #changed
-        ) #changed
+    # create fields for gt4py
+    if backend == "gt4py":
+        if stencil_name in ["test_gt4py","laplacian3d_gt4py"]:
+            origin = (num_halo, num_halo, num_halo)
+        elif stencil_name == "laplacian1d_gt4py":
+            origin = (num_halo, 0, 0)
+        elif stencil_name == "laplacian2d_gt4py":
+            origin = (num_halo, num_halo, 0)
+
+            
+        in_field = gt4py.storage.from_array( 
+            in_field, gt4py_backend, default_origin = origin 
+        )
+        tmp_field = gt4py.storage.from_array( 
+            tmp_field, gt4py_backend, default_origin =  origin 
+        ) 
+        in_field2 = gt4py.storage.from_array( 
+            in_field2, gt4py_backend, default_origin = origin
+        ) 
+        out_field = gt4py.storage.from_array( 
+            out_field, gt4py_backend, default_origin = origin
+        ) 
         
     # import and possibly compile proper stencil object
     if backend == "numpy":
@@ -225,9 +235,9 @@ def main(
     elif backend == "numba_stencil":
         stencil = eval(f"stencils_numba_stencil.{stencil_name}")
         stencil = njit(stencil, parallel=numba_parallel)
-    else:  # gt4py  #changed
-        stencil = eval(f"stencils_gt4py.{stencil_name}") #changed
-        stencil = gt4py.gtscript.stencil(gt4py_backend, stencil) #changed
+    else:  # gt4py  
+        stencil = eval(f"stencils_gt4py.{stencil_name}") 
+        stencil = gt4py.gtscript.stencil(gt4py_backend, stencil) 
     
     #warm-up caches
     if backend in ("numpy", "numba_vector_function","numba_vector_decorator"):
@@ -275,7 +285,7 @@ def main(
         in_field, #changed
         tmp_field, #changed
         in_field2, #changed
-        origin=(num_halo, num_halo, num_halo), #changed
+        origin=origin, #changed
         domain=(nx, ny, nz), #changed
         ) #changed
     #     #else: test
@@ -354,7 +364,7 @@ def main(
                 in_field, #changed
                 tmp_field, #changed
                 in_field2, #changed
-                origin=(num_halo, num_halo, num_halo), #changed
+                origin=origin, #changed
                 domain=(nx, ny, nz), #changed
             ) #changed
             toc = time.time() #changed
