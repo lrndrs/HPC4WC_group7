@@ -151,7 +151,7 @@ def main(
     #define value of num_halo
     if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
         num_halo = 1
-    elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
+    elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d", "test_gt4py"):
         num_halo = 2
     else: #FMA and test
         num_halo = 0
@@ -174,28 +174,30 @@ def main(
     out_field = np.empty_like(in_field)
 
     # create fields for gt4py
-    if backend == "gt4py": 
-        if stencil_name in ["test_gt4py","laplacian3d_gt4py"]:
+    if backend == "gt4py":
+        if stencil_name in ["test_gt4py","laplacian3d", "lapoflap3d"]:
             origin = (num_halo, num_halo, num_halo)
-        elif stencil_name == "laplacian1d_gt4py":
+        elif stencil_name in ["laplacian1d", "lapoflap1d"]:
             origin = (num_halo, 0, 0)
-        elif stencil_name == "laplacian2d_gt4py":
+        elif stencil_name in ["laplacian2d", "lapoflap2d"]:
             origin = (num_halo, num_halo, 0)
-
+        elif stencil_name == "FMA":
+            origin = (0, 0, 0)
+            
         in_field = gt4py.storage.from_array( 
             in_field, gt4py_backend, default_origin = origin 
-        ) 
+        )
         tmp_field = gt4py.storage.from_array( 
-            tmp_field, gt4py_backend, default_origin = origin 
+            tmp_field, gt4py_backend, default_origin =  origin 
         ) 
         in_field2 = gt4py.storage.from_array( 
-            in_field2, gt4py_backend, default_origin = origin 
+            in_field2, gt4py_backend, default_origin = origin
         ) 
-        in_field3 = gt4py.storage.from_array( 
-            in_field3, gt4py_backend, default_origin = origin 
+        in_field3 = gt4py.storage.from_array( #changed here
+            in_field3, gt4py_backend, default_origin = origin
         ) 
         out_field = gt4py.storage.from_array( 
-            out_field, gt4py_backend, default_origin = origin 
+            out_field, gt4py_backend, default_origin = origin
         ) 
 
 #----
@@ -242,30 +244,30 @@ def main(
 #         else: #Test
 #             stencil(in_field)
     
-    else:  # gt4py  
-    #     if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-    #         stencil(
-    #             in_field,
-    #             tmp_field,
-    #             origin=(num_halo, num_halo, num_halo),
-    #             domain=(nx, ny, nz),
-    #         )
-    #     elif stencil_name == "FMA":
-    #         stencil(
-    #             in_field,
-    #             in_field2,
-    #             in_field3,
-    #             tmp_field,
-    #             origin=(num_halo, num_halo, num_halo),
-    #             domain=(nx, ny, nz),
-    #         )
-    #     elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-        stencil( 
-        in_field, 
-        tmp_field, 
-        in_field2, 
-        origin=origin, 
-        domain=(nx, ny, nz), 
+    else:  # gt4py  #changed here
+        if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d", "test_gt4py"):
+            stencil( 
+            in_field, 
+            out_field, 
+            origin=origin, 
+            domain=(nx, ny, nz), 
+            ) 
+        elif stencil_name == "FMA":
+            stencil(
+            in_field,
+            in_field2,
+            in_field3,
+            out_field,
+            origin=origin,
+            domain=(nx, ny, nz),
+            )
+        elif stencil_name in ("lapoflap1", "lapoflap2d", "lapoflap3d"):
+            stencil( 
+            in_field, 
+            tmp_field, 
+            out_field, 
+            origin=origin, 
+            domain=(nx, ny, nz), 
         ) 
     #     #else: test
         

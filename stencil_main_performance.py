@@ -60,7 +60,7 @@ from functions.halo_functions import update_halo, add_halo_points, remove_halo_p
     "--stencil_name",
     type=str,
     required=True, #changed here
-    help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","lapoflap1d", "lapoflap2d", "lapoflap3d",]',
+    help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","lapoflap1d", "lapoflap2d", "lapoflap3d","test_gt4py"]',
 )
 @click.option(
     "--backend",
