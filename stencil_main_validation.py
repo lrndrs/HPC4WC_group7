@@ -219,28 +219,28 @@ def main(
         stencil = gt4py.gtscript.stencil(gt4py_backend, stencil) 
     
     #warm-up caches (and run stencil computation one time)
-    if backend in ("numpy", "numba_vector_function","numba_vector_decorator"):
+    if backend in ("numpy","numba_vector_function","numba_vector_decorator",
+                   "numba_loop","numba_stencil"):#changed
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-            stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+            stencil(in_field, out_field, num_halo=num_halo)
         elif stencil_name == "FMA":
             stencil(
-                in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0
-            )
+                in_field, in_field2, in_field3, out_field, num_halo=num_halo)
         elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-            stencil(in_field, tmp_field, out_field, num_halo=2, extend=1)
+            stencil(in_field, tmp_field, out_field, num_halo=2)
         else: #Test
             stencil(in_field)
     
-    elif backend in ("numba_loop","numba_stencil"):
-        if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-            stencil(in_field, tmp_field)
-        elif stencil_name == "FMA":
-            stencil(
-                in_field, in_field2, in_field3, tmp_field)
-        elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-            stencil(in_field, tmp_field, out_field)
-        else: #Test
-            stencil(in_field)
+#     elif backend in ("numba_loop","numba_stencil"):#changed
+#         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
+#             stencil(in_field, tmp_field)
+#         elif stencil_name == "FMA":
+#             stencil(
+#                 in_field, in_field2, in_field3, tmp_field)
+#         elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
+#             stencil(in_field, tmp_field, out_field)
+#         else: #Test
+#             stencil(in_field)
     
     else:  # gt4py  
     #     if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
