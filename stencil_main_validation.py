@@ -96,9 +96,9 @@ def main(
 ):
     """Field validation driver for high-level comparison of stencil computation in python."""
 
-    assert 0 < nx <= 1024 * 1024, "You have to specify a reasonable value for nx"
-    assert 0 < ny <= 1024 * 1024, "You have to specify a reasonable value for ny"
-    assert 0 < nz <= 1024, "You have to specify a reasonable value for nz"
+    assert 1 < nx <= 1024 * 1024, "You have to specify a reasonable value for nx"
+    assert 1 < ny <= 1024 * 1024, "You have to specify a reasonable value for ny"
+    assert 1 < nz <= 1024, "You have to specify a reasonable value for nz"
 
     stencil_name_list = [
         "test",
@@ -157,10 +157,11 @@ def main(
         num_halo = 2
     else:  # FMA and test
         num_halo = 0
-     
+    
     #print('nr of halo=',num_halo) #for debug
 
     in_field = add_halo_points(in_field, num_halo)
+    #print('add_halo_Points:',in_field) #for debug
     in_field = update_halo(in_field, num_halo)
     
     #print('new shape infield ',in_field.shape) #for debug
@@ -179,6 +180,7 @@ def main(
     tmp_field = np.ones_like(in_field)
     out_field = np.ones_like(in_field)
     
+    #print('new in_field:',in_field) #for debug
     #print('new out_field:',out_field) #for debug
 
     # create fields for gt4py
@@ -276,7 +278,7 @@ def main(
             )
     #     #else: test
     
-   # print('Stencil Outfield',out_field) #for debug
+    #print('Stencil Outfield',out_field) #for debug
     
     # delete halo from out_field #removed 
     #out_field = remove_halo_points(out_field, num_halo)

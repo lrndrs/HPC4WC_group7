@@ -107,9 +107,9 @@ def main(
 ):
     """Performance assesment driver for high-level comparison of stencil computation in python."""
 
-    assert 0 < nx <= 1024 * 1024, "You have to specify a reasonable value for nx"
-    assert 0 < ny <= 1024 * 1024, "You have to specify a reasonable value for ny"
-    assert 0 < nz <= 1024, "You have to specify a reasonable value for nz"
+    assert 1 < nx <= 1024 * 1024, "You have to specify a reasonable value for nx"
+    assert 1 < ny <= 1024 * 1024, "You have to specify a reasonable value for ny"
+    assert 1 < nz <= 1024, "You have to specify a reasonable value for nz"
     assert (
         0 < num_iter <= 1024 * 1024
     ), "You have to specify a reasonable value for num_iter"
@@ -124,6 +124,7 @@ def main(
         "lapoflap2d",
         "lapoflap3d",
         "test_gt4py",
+        "test"
     ]
     if stencil_name not in stencil_name_list:
         print(
@@ -190,10 +191,10 @@ def main(
     in_field = update_halo(in_field, num_halo)
 
     # create additional fields
-    in_field2 = np.ones_like(in_field)
+    in_field2 = np.ones_like(in_field) * 2.1
     in_field3 = np.ones_like(in_field) * 4.2
-    tmp_field = np.empty_like(in_field)
-    out_field = np.empty_like(in_field)
+    tmp_field = np.ones_like(in_field)
+    out_field = np.zeros_like(in_field)
 
     # create fields for gt4py #changed here
     if backend == "gt4py":
@@ -257,7 +258,7 @@ def main(
         elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
             stencil(in_field, tmp_field, out_field, num_halo=num_halo)  # changed
         else:  # Test
-            stencil(in_field)
+            stencil(in_field,out_field)
 
     #     elif backend in ("numba_loop","numba_stencil"):#changed
     #         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
@@ -295,6 +296,8 @@ def main(
     # Call the stencil chosen in stencil_name
     time_list = []
     for i in range(num_iter):
+        
+        update_halo( in_field, num_halo )
 
         if backend in (
             "numpy",
@@ -321,7 +324,7 @@ def main(
                 toc = time.time()
             else:  # Test
                 tic = time.time()
-                out_field = stencil(in_field)
+                out_field = stencil(in_field,out_field)
                 toc = time.time()
 
         #         elif backend in ("numba_loop","numba_stencil"):#changed
@@ -374,6 +377,8 @@ def main(
                 toc = time.time()
                 # else: test
         time_list.append(toc - tic)
+        if i < num_iter - 1: #swap fields
+            in_field, out_field = out_field, in_field
 
     time_avg = np.average(time_list)
     time_stdev = np.std(time_list)

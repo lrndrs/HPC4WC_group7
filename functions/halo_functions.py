@@ -61,17 +61,17 @@ def update_halo(field, num_halo):
     dim = field.ndim
 
     if num_halo == 0:
-        field = field
+        field[...] = field
     else:
         if dim == 3:
             # bottom edge
-            field[:, 0:num_halo, num_halo:-num_halo] = field[
-                :, -2 * num_halo : -num_halo, num_halo:-num_halo
+            field[num_halo:-num_halo, 0:num_halo, num_halo:-num_halo] = field[
+                num_halo:-num_halo, -2 * num_halo : -num_halo, num_halo:-num_halo
             ]
 
             # top edge
-            field[:, -num_halo:, num_halo:-num_halo] = field[
-                :, num_halo : 2 * num_halo, num_halo:-num_halo
+            field[num_halo:-num_halo, -num_halo:, num_halo:-num_halo] = field[
+                num_halo:-num_halo, num_halo : 2 * num_halo, num_halo:-num_halo
             ]
 
             # left edge
@@ -103,7 +103,7 @@ def update_halo(field, num_halo):
     return field
 
 
-def remove_halo_points(field, num_halo):
+def remove_halo_points(field, num_halo): #depreceated!
     """
     Removes halo points to an array on each end (call only once after timeloop before save)
     """
