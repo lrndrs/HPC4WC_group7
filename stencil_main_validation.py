@@ -233,7 +233,7 @@ def main(
         elif stencil_name == "FMA":
             stencil(in_field, in_field2, in_field3, out_field, num_halo=num_halo)
         elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-            stencil(in_field, tmp_field, out_field, num_halo=2)
+            stencil(in_field, tmp_field, out_field, num_halo=num_halo)
         else:  # Test
             stencil(in_field)
 

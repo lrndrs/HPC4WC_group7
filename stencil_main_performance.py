@@ -252,10 +252,10 @@ def main(
             stencil(in_field, out_field, num_halo=num_halo)  # changed
         elif stencil_name == "FMA":
             stencil(
-                in_field, in_field2, in_field3, tmp_field, num_halo=num_halo
+                in_field, in_field2, in_field3, out_field, num_halo=num_halo
             )  # changed
         elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-            stencil(in_field, tmp_field, out_field, num_halo=2)  # changed
+            stencil(in_field, tmp_field, out_field, num_halo=num_halo)  # changed
         else:  # Test
             stencil(in_field)
 
