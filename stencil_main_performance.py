@@ -251,7 +251,7 @@ def main(
     if backend in ("numpy", "numba_vector_function","numba_vector_decorator",
                    "numba_loop","numba_stencil"):#changed
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-            stencil(in_field, tmp_field, num_halo=num_halo)#changed
+            stencil(in_field, out_field, num_halo=num_halo)#changed
         elif stencil_name == "FMA":
             stencil(
                 in_field, in_field2, in_field3, tmp_field, num_halo=num_halo
