@@ -146,6 +146,8 @@ def main(
 
     else:
         in_field = field_validation.create_val_infield(nx, ny, nz, field_name)
+        
+    #print('new infield:',in_field) #for debug
 
     # expand in_field to contain halo points
     # define value of num_halo
@@ -155,9 +157,13 @@ def main(
         num_halo = 2
     else:  # FMA and test
         num_halo = 0
+     
+    #print('nr of halo=',num_halo) #for debug
 
     in_field = add_halo_points(in_field, num_halo)
     in_field = update_halo(in_field, num_halo)
+    
+    #print('new shape infield ',in_field.shape) #for debug
 
     # plot result as png
     if plot_result:
@@ -170,8 +176,10 @@ def main(
     # create additional fields
     in_field2 = np.ones_like(in_field)
     in_field3 = np.ones_like(in_field) * 4.2
-    tmp_field = np.empty_like(in_field)
-    out_field = np.empty_like(in_field)
+    tmp_field = np.ones_like(in_field)
+    out_field = np.ones_like(in_field)
+    
+    #print('new out_field:',out_field) #for debug
 
     # create fields for gt4py
     if backend == "gt4py":
@@ -235,7 +243,7 @@ def main(
         elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
             stencil(in_field, tmp_field, out_field, num_halo=num_halo)
         else:  # Test
-            stencil(in_field)
+            stencil(in_field,out_field)
 
     #     elif backend in ("numba_loop","numba_stencil"):#changed
     #         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
@@ -267,14 +275,15 @@ def main(
                 in_field, tmp_field, out_field, origin=origin, domain=(nx, ny, nz),
             )
     #     #else: test
-
-    # delete halo from out_field
-    out_field = remove_halo_points(out_field, num_halo)
+    
+   # print('Stencil Outfield',out_field) #for debug
+    
+    # delete halo from out_field #removed 
+    #out_field = remove_halo_points(out_field, num_halo)
 
     # Save or validate Outfield
     if create_field == True:
         field_validation.save_new_outfield(out_field, field_name)
-        # valid_var = "-"
 
     elif create_field == False:
         field_validation.validate_outfield(out_field, field_name, stencil_name, backend)

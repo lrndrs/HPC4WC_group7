@@ -7,7 +7,7 @@
 import numpy as np
 
 
-def test(in_field):
+def test(in_field,out_field):
     """
     Simple test function that returns a copy of the in_field.
     
@@ -20,9 +20,9 @@ def test(in_field):
     out_field : a copy of the in_field.
     
     """
-    out_field = np.copy(in_field)
+    out_field[...] = in_field
 
-    return out_field
+
 
 
 def laplacian1d(in_field, out_field, num_halo=1):
