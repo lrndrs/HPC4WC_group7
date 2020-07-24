@@ -25,7 +25,6 @@ def test(in_field):
     return out_field
 
 
-
 def laplacian1d(in_field, out_field, num_halo=1):
     """Compute Laplacian using 2nd-order centered differences with an explicit nested loop in numba.
     
@@ -40,16 +39,16 @@ def laplacian1d(in_field, out_field, num_halo=1):
     out_field : in_field with Laplacian computed in i-direction.
     
     """
-     
-    I, J, K = in_field.shape 
+
+    I, J, K = in_field.shape
 
     for i in range(num_halo, I - num_halo):
         for j in range(num_halo, J - num_halo):
             for k in range(num_halo, K - num_halo):
                 out_field[i, j, k] = (
-                        -2.0 * in_field[i, j, k]
-                        + in_field[i - 1, j, k]
-                        + in_field[i + 1, j, k]
+                    -2.0 * in_field[i, j, k]
+                    + in_field[i - 1, j, k]
+                    + in_field[i + 1, j, k]
                 )
 
     return out_field
@@ -70,21 +69,21 @@ def laplacian2d(in_field, out_field, num_halo=1):
     out_field : in_field with Laplacian computed in i- and j-direction (horizontal Laplacian).
     
     """
-    I, J, K = in_field.shape 
+    I, J, K = in_field.shape
 
     for i in range(num_halo, I - num_halo):
         for j in range(num_halo, J - num_halo):
             for k in range(num_halo, K - num_halo):
                 out_field[i, j, k] = (
-                        -4.0 * in_field[i, j, k]
-                        + in_field[i - 1, j, k]
-                        + in_field[i + 1, j, k]
-                        + in_field[i, j - 1, k]
-                        + in_field[i, j + 1, k]
+                    -4.0 * in_field[i, j, k]
+                    + in_field[i - 1, j, k]
+                    + in_field[i + 1, j, k]
+                    + in_field[i, j - 1, k]
+                    + in_field[i, j + 1, k]
                 )
 
     return out_field
-    
+
 
 def laplacian3d(in_field, out_field, num_halo=1):
     """
@@ -102,22 +101,23 @@ def laplacian3d(in_field, out_field, num_halo=1):
     
     """
 
-    I, J, K = in_field.shape 
+    I, J, K = in_field.shape
 
     for i in range(num_halo, I - num_halo):
         for j in range(num_halo, J - num_halo):
             for k in range(num_halo, K - num_halo):
                 out_field[i, j, k] = (
-                        -6.0 * in_field[i, j, k]
-                        + in_field[i - 1, j, k]
-                        + in_field[i + 1, j, k]
-                        + in_field[i, j - 1, k]
-                        + in_field[i, j + 1, k]
-                        + in_field[i, j, k - 1]
-                        + in_field[i, j, k + 1]
+                    -6.0 * in_field[i, j, k]
+                    + in_field[i - 1, j, k]
+                    + in_field[i + 1, j, k]
+                    + in_field[i, j - 1, k]
+                    + in_field[i, j + 1, k]
+                    + in_field[i, j, k - 1]
+                    + in_field[i, j, k + 1]
                 )
 
     return out_field
+
 
 def FMA(in_field, in_field2, in_field3, out_field, num_halo=0):
     """
@@ -134,17 +134,18 @@ def FMA(in_field, in_field2, in_field3, out_field, num_halo=0):
     out_field : fused multiply-add applied to in_field.
     
     """
-    
-    I,J,K=in_field.shape
-    
+
+    I, J, K = in_field.shape
+
     for i in range(num_halo, I - num_halo):
         for j in range(num_halo, J - num_halo):
             for k in range(num_halo, K - num_halo):
-    
-                out_field[i, j, k] = in_field[i, j, k] + in_field2[i, j, k] * in_field3[i, j, k]
+
+                out_field[i, j, k] = (
+                    in_field[i, j, k] + in_field2[i, j, k] * in_field3[i, j, k]
+                )
 
     return out_field
-
 
 
 def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
@@ -170,21 +171,22 @@ def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
         for j in range(num_halo, J - num_halo):
             for k in range(num_halo, K - num_halo):
                 tmp_field[i, j, k] = (
-                        -2.0 * in_field[i, j, k]
-                        + in_field[i - 1, j, k]
-                        + in_field[i + 1, j, k]
+                    -2.0 * in_field[i, j, k]
+                    + in_field[i - 1, j, k]
+                    + in_field[i + 1, j, k]
                 )
 
     for i in range(num_halo + 1, I - num_halo - 1):
         for j in range(num_halo + 1, J - num_halo - 1):
             for k in range(num_halo + 1, K - num_halo - 1):
                 out_field[i, j, k] = (
-                        -2.0 * tmp_field[i, j, k]
-                        + tmp_field[i - 1, j, k]
-                        + tmp_field[i + 1, j, k]
-                )    
+                    -2.0 * tmp_field[i, j, k]
+                    + tmp_field[i - 1, j, k]
+                    + tmp_field[i + 1, j, k]
+                )
 
     return out_field
+
 
 def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     """
@@ -202,32 +204,33 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     out_field  : in_field with Laplacian of the Laplacian computed in i- and j-direction (horizontally).
     
     """
-    
+
     I, J, K = in_field.shape
 
     for i in range(num_halo, I - num_halo):
         for j in range(num_halo, J - num_halo):
             for k in range(num_halo, K - num_halo):
                 tmp_field[i, j, k] = (
-                        -4.0 * in_field[i, j, k]
-                        + in_field[i - 1, j, k]
-                        + in_field[i + 1, j, k]
-                        + in_field[i, j - 1, k]
-                        + in_field[i, j + 1, k]
+                    -4.0 * in_field[i, j, k]
+                    + in_field[i - 1, j, k]
+                    + in_field[i + 1, j, k]
+                    + in_field[i, j - 1, k]
+                    + in_field[i, j + 1, k]
                 )
 
     for i in range(num_halo + 1, I - num_halo - 1):
         for j in range(num_halo + 1, J - num_halo - 1):
             for k in range(num_halo + 1, K - num_halo - 1):
                 out_field[i, j, k] = (
-                        -4.0 * tmp_field[i, j, k]
-                        + tmp_field[i - 1, j, k]
-                        + tmp_field[i + 1, j, k]
-                        + tmp_field[i, j - 1, k]
-                        + tmp_field[i, j + 1, k]
-                )    
+                    -4.0 * tmp_field[i, j, k]
+                    + tmp_field[i - 1, j, k]
+                    + tmp_field[i + 1, j, k]
+                    + tmp_field[i, j - 1, k]
+                    + tmp_field[i, j + 1, k]
+                )
 
     return out_field
+
 
 def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
     """
@@ -246,33 +249,31 @@ def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
     
     """
     I, J, K = in_field.shape
-    
+
     for i in range(num_halo, I - num_halo):
         for j in range(num_halo, J - num_halo):
             for k in range(num_halo, K - num_halo):
                 tmp_field[i, j, k] = (
-                        -6.0 * in_field[i, j, k]
-                        + in_field[i - 1, j, k]
-                        + in_field[i + 1, j, k]
-                        + in_field[i, j - 1, k]
-                        + in_field[i, j + 1, k]
-                        + in_field[i, j, k - 1]
-                        + in_field[i, j, k + 1]
+                    -6.0 * in_field[i, j, k]
+                    + in_field[i - 1, j, k]
+                    + in_field[i + 1, j, k]
+                    + in_field[i, j - 1, k]
+                    + in_field[i, j + 1, k]
+                    + in_field[i, j, k - 1]
+                    + in_field[i, j, k + 1]
                 )
 
     for i in range(num_halo + 1, I - num_halo - 1):
         for j in range(num_halo + 1, J - num_halo - 1):
             for k in range(num_halo + 1, K - num_halo - 1):
                 out_field[i, j, k] = (
-                        -6.0 * tmp_field[i, j, k]
-                        + tmp_field[i - 1, j, k]
-                        + tmp_field[i + 1, j, k]
-                        + tmp_field[i, j - 1, k]
-                        + tmp_field[i, j + 1, k]
-                        + in_field[i, j, k - 1]
-                        + in_field[i, j, k + 1]
-                )    
+                    -6.0 * tmp_field[i, j, k]
+                    + tmp_field[i - 1, j, k]
+                    + tmp_field[i + 1, j, k]
+                    + tmp_field[i, j - 1, k]
+                    + tmp_field[i, j + 1, k]
+                    + in_field[i, j, k - 1]
+                    + in_field[i, j, k + 1]
+                )
 
     return out_field
-
-    

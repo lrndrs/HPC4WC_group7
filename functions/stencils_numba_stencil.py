@@ -5,17 +5,17 @@ from numba import stencil
 # def test(in_field):
 #     """
 #     Simple test function that returns a copy of the in_field.
-    
+
 #     Parameters
 #     ----------
 #     in_field  : input field (nx x ny x nz).
-    
+
 #     Returns
 #     -------
 #     out_field : a copy of the in_field.
-    
+
 #     """
-    
+
 #     return in_field[0,0,0]
 
 
@@ -34,17 +34,24 @@ def laplacian1d(in_field, out_field, num_halo=1):
     out_field : in_field with Laplacian computed in i-direction.
     
     """
-    #closure inlining
+    # closure inlining
     def laplacian1d_kernel(in_field):
         """
         laplacian kernel which is passed to the numba stencil function
         """
         return -2.0 * in_field[0, 0, 0] + in_field[-1, 0, 0] + in_field[+1, 0, 0]
 
-    out_field = stencil(laplacian1d_kernel,neighborhood=((-num_halo, num_halo), (-num_halo, num_halo), (-num_halo, num_halo)))(in_field, out= out_field)
-    
+    out_field = stencil(
+        laplacian1d_kernel,
+        neighborhood=(
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+        ),
+    )(in_field, out=out_field)
+
     return out_field
-    
+
 
 def laplacian2d(in_field, out_field, num_halo=1):
     """
@@ -61,21 +68,28 @@ def laplacian2d(in_field, out_field, num_halo=1):
     out_field : in_field with Laplacian computed in i-direction.
     
     """
-    #closure inlining
+    # closure inlining
     def laplacian2d_kernel(in_field):
         """
         laplacian kernel which is passed to the numba stencil function
         """
         return (
-        -4.0 * in_field[0, 0, 0]
-        + in_field[-1, 0, 0]
-        + in_field[1, 0, 0]
-        + in_field[0, -1, 0]
-        + in_field[0, +1, 0]
-    )
+            -4.0 * in_field[0, 0, 0]
+            + in_field[-1, 0, 0]
+            + in_field[1, 0, 0]
+            + in_field[0, -1, 0]
+            + in_field[0, +1, 0]
+        )
 
-    out_field = stencil(laplacian2d_kernel,neighborhood=((-num_halo, num_halo), (-num_halo, num_halo), (-num_halo, num_halo)))(in_field, out= out_field)
-    
+    out_field = stencil(
+        laplacian2d_kernel,
+        neighborhood=(
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+        ),
+    )(in_field, out=out_field)
+
     return out_field
 
 
@@ -94,24 +108,32 @@ def laplacian3d(in_field, out_field, num_halo=1):
     out_field : in_field with Laplacian computed in i-direction.
     
     """
-    #closure inlining
+    # closure inlining
     def laplacian3d_kernel(in_field):
         """
         laplacian kernel which is passed to the numba stencil function
         """
         return (
-        -6.0 * in_field[0, 0, 0]
-        + in_field[-1, 0, 0]
-        + in_field[+1, 0, 0]
-        + in_field[0, -1, 0]
-        + in_field[0, +1, 0]
-        + in_field[0, 0, -1]
-        + in_field[0, 0, +1]
-    )
+            -6.0 * in_field[0, 0, 0]
+            + in_field[-1, 0, 0]
+            + in_field[+1, 0, 0]
+            + in_field[0, -1, 0]
+            + in_field[0, +1, 0]
+            + in_field[0, 0, -1]
+            + in_field[0, 0, +1]
+        )
 
-    out_field = stencil(laplacian3d_kernel,neighborhood=((-num_halo, num_halo), (-num_halo, num_halo), (-num_halo, num_halo)))(in_field, out= out_field)
-    
+    out_field = stencil(
+        laplacian3d_kernel,
+        neighborhood=(
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+        ),
+    )(in_field, out=out_field)
+
     return out_field
+
 
 def FMA(in_field, in_field2, in_field3, out_field, num_halo=0):
     """
@@ -128,17 +150,22 @@ def FMA(in_field, in_field2, in_field3, out_field, num_halo=0):
     out_field : fused multiply-add applied to in_field.
     
     """
-    #closure inlining
+    # closure inlining
     def FMA_kernel(in_field, in_field2, in_field3):
         """
         kernel which is passed to the numba stencil function
         """
-        return (
-        in_field[0,0,0] + in_field2[0,0,0] * in_field3[0,0,0]
-    )
+        return in_field[0, 0, 0] + in_field2[0, 0, 0] * in_field3[0, 0, 0]
 
-    out_field = stencil(FMA_kernel,neighborhood=((-num_halo, num_halo), (-num_halo, num_halo), (-num_halo, num_halo)))(in_field, in_field2, in_field3, out= out_field)
-    
+    out_field = stencil(
+        FMA_kernel,
+        neighborhood=(
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+        ),
+    )(in_field, in_field2, in_field3, out=out_field)
+
     return out_field
 
 
@@ -158,18 +185,32 @@ def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
     out_field  : in_field with Laplacian of the Laplacian computed in i-direction.
     
     """
-    #closure inlining
+    # closure inlining
     def laplacian1d_kernel(in_field):
         """
         laplacian kernel which is passed to the numba stencil function
         """
         return -2.0 * in_field[0, 0, 0] + in_field[-1, 0, 0] + in_field[+1, 0, 0]
 
-    tmp_field = stencil(laplacian1d_kernel,neighborhood=((-num_halo+1, num_halo-1),(-num_halo+1, num_halo-1),(-num_halo+1, num_halo-1)))(in_field, out= tmp_field)
-    out_field = stencil(laplacian1d_kernel,neighborhood=((-num_halo, num_halo),(-num_halo, num_halo),(-num_halo, num_halo)))(tmp_field, out= out_field)
-    
+    tmp_field = stencil(
+        laplacian1d_kernel,
+        neighborhood=(
+            (-num_halo + 1, num_halo - 1),
+            (-num_halo + 1, num_halo - 1),
+            (-num_halo + 1, num_halo - 1),
+        ),
+    )(in_field, out=tmp_field)
+    out_field = stencil(
+        laplacian1d_kernel,
+        neighborhood=(
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+        ),
+    )(tmp_field, out=out_field)
+
     return out_field
-    
+
 
 def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     """
@@ -187,23 +228,37 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     out_field  : in_field with Laplacian of the Laplacian computed in i-direction.
     
     """
-    #closure inlining
+    # closure inlining
     def laplacian2d_kernel(in_field):
         """
         laplacian kernel which is passed to the numba stencil function
         """
         return (
-        -4.0 * in_field[0, 0, 0]
-        + in_field[-1, 0, 0]
-        + in_field[1, 0, 0]
-        + in_field[0, -1, 0]
-        + in_field[0, +1, 0]
-    )
+            -4.0 * in_field[0, 0, 0]
+            + in_field[-1, 0, 0]
+            + in_field[1, 0, 0]
+            + in_field[0, -1, 0]
+            + in_field[0, +1, 0]
+        )
 
-    tmp_field = stencil(laplacian2d_kernel,neighborhood=((-num_halo+1, num_halo-1),(-num_halo+1, num_halo-1),(-num_halo+1, num_halo-1)))(in_field, out= tmp_field)
-    out_field = stencil(laplacian2d_kernel,neighborhood=((-num_halo, num_halo),(-num_halo, num_halo),(-num_halo, num_halo)))(tmp_field, out= out_field)
-    
-    return out_field   
+    tmp_field = stencil(
+        laplacian2d_kernel,
+        neighborhood=(
+            (-num_halo + 1, num_halo - 1),
+            (-num_halo + 1, num_halo - 1),
+            (-num_halo + 1, num_halo - 1),
+        ),
+    )(in_field, out=tmp_field)
+    out_field = stencil(
+        laplacian2d_kernel,
+        neighborhood=(
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+        ),
+    )(tmp_field, out=out_field)
+
+    return out_field
 
 
 def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
@@ -222,22 +277,36 @@ def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
     out_field  : in_field with Laplacian of the Laplacian computed in i-direction.
     
     """
-    #closure inlining
+    # closure inlining
     def laplacian3d_kernel(in_field):
         """
         laplacian kernel which is passed to the numba stencil function
         """
         return (
-        -6.0 * in_field[0, 0, 0]
-        + in_field[-1, 0, 0]
-        + in_field[+1, 0, 0]
-        + in_field[0, -1, 0]
-        + in_field[0, +1, 0]
-        + in_field[0, 0, -1]
-        + in_field[0, 0, +1]
-    )
+            -6.0 * in_field[0, 0, 0]
+            + in_field[-1, 0, 0]
+            + in_field[+1, 0, 0]
+            + in_field[0, -1, 0]
+            + in_field[0, +1, 0]
+            + in_field[0, 0, -1]
+            + in_field[0, 0, +1]
+        )
 
-    tmp_field = stencil(laplacian3d_kernel,neighborhood=((-num_halo+1, num_halo-1),(-num_halo+1, num_halo-1),(-num_halo+1, num_halo-1)))(in_field, out= tmp_field)
-    out_field = stencil(laplacian3d_kernel,neighborhood=((-num_halo, num_halo),(-num_halo, num_halo),(-num_halo, num_halo)))(tmp_field, out= out_field)
-    
-    return out_field  
+    tmp_field = stencil(
+        laplacian3d_kernel,
+        neighborhood=(
+            (-num_halo + 1, num_halo - 1),
+            (-num_halo + 1, num_halo - 1),
+            (-num_halo + 1, num_halo - 1),
+        ),
+    )(in_field, out=tmp_field)
+    out_field = stencil(
+        laplacian3d_kernel,
+        neighborhood=(
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+            (-num_halo, num_halo),
+        ),
+    )(tmp_field, out=out_field)
+
+    return out_field

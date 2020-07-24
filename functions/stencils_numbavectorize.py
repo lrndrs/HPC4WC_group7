@@ -3,8 +3,6 @@ from numba import jit, njit, vectorize, stencil, stencils
 from numba import vectorize, guvectorize, float64, int32
 
 
-
-
 # vectorize only works for point-wise stencils. maybe @guvectorize does the job for non-point-wise stencils
 # did not yet found a way to deal with the halo
 @vectorize([float64(float64, float64, float64)], nopython=True)  # target="parallel"
@@ -22,4 +20,3 @@ def FMA(in_field, in_field2, in_field3):
 #    for i in range(num_halo -extend, in_field.shape[0] - num_halo + extend):
 #        tmp_field[i, : , : ] = - 2. * in_field[i, 0, 0]  \
 #        + in_field[i - 1, 0, 0] + in_field[i + 1 , 0, 0]
-

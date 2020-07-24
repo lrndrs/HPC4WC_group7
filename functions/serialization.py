@@ -8,7 +8,21 @@ import os.path
 
 
 def add_data(
-    df_name, stencil_name, backend,numba_parallel,gt4py_backend, nx, ny, nz, num_iter, elapsedtime, run_avg, run_stdev, run_first10, run_last10):
+    df_name,
+    stencil_name,
+    backend,
+    numba_parallel,
+    gt4py_backend,
+    nx,
+    ny,
+    nz,
+    num_iter,
+    elapsedtime,
+    run_avg,
+    run_stdev,
+    run_first10,
+    run_last10,
+):
     """
     Appends a row with several variables to the CSV performance report.
 
@@ -28,19 +42,52 @@ def add_data(
     None.
 
     """
-    if os.path.exists("eval/{}_result.pkl".format(df_name))== False :
-        df = pd.DataFrame(data=None,columns=["stencil_name", "backend","numba_parallel","gt4py_backend", "nx", "ny", "nz","num_iter", "time_total","run_avg","run_stdev","run_first10","run_last10"]
+    if os.path.exists("eval/{}_result.pkl".format(df_name)) == False:
+        df = pd.DataFrame(
+            data=None,
+            columns=[
+                "stencil_name",
+                "backend",
+                "numba_parallel",
+                "gt4py_backend",
+                "nx",
+                "ny",
+                "nz",
+                "num_iter",
+                "time_total",
+                "run_avg",
+                "run_stdev",
+                "run_first10",
+                "run_last10",
+            ],
         )
         print("New dataframe {} generated.".format(df_name))
-        
-    else :
+
+    else:
         df = pd.read_pickle("eval/{}_result.pkl".format(df_name))
-        
-    
-    #Add data
-    df = df.append({'stencil_name':stencil_name,'backend':backend,'numba_parallel':numba_parallel,'gt4py_backend':gt4py_backend,'nx':nx,'ny':ny,'nz':nz,"time_total":elapsedtime,"run_avg":run_avg,"run_stdev":run_stdev,"run_first10":run_first10, "run_last10":run_last10,"num_iter":num_iter}, ignore_index=True, sort=False)
+
+    # Add data
+    df = df.append(
+        {
+            "stencil_name": stencil_name,
+            "backend": backend,
+            "numba_parallel": numba_parallel,
+            "gt4py_backend": gt4py_backend,
+            "nx": nx,
+            "ny": ny,
+            "nz": nz,
+            "time_total": elapsedtime,
+            "run_avg": run_avg,
+            "run_stdev": run_stdev,
+            "run_first10": run_first10,
+            "run_last10": run_last10,
+            "num_iter": num_iter,
+        },
+        ignore_index=True,
+        sort=False,
+    )
     df.to_pickle("eval/{}_result.pkl".format(df_name))
-    
+
 
 def save_runtime_as_df(time_list):
     """
@@ -58,7 +105,3 @@ def save_runtime_as_df(time_list):
 
     df = pd.DataFrame(time_list)
     df.to_pickle("eval/runtimedevelopment.pkl")
-    
-    
-
-        

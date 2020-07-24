@@ -59,8 +59,8 @@ def update_halo(field, num_halo):
     
     """
     dim = field.ndim
-    
-    if num_halo==0:
+
+    if num_halo == 0:
         field = field
     else:
         if dim == 3:

@@ -6,7 +6,7 @@ import numpy as np
 import os.path
 
 
-def create_new_infield(nx, ny, nz,field_name):
+def create_new_infield(nx, ny, nz, field_name):
     """
     Creates a new 3D infield that is saved as .npy file and can be used for validation purposes.
 
@@ -28,7 +28,7 @@ def create_new_infield(nx, ny, nz,field_name):
     return testfield
 
 
-def create_val_infield(nx, ny, nz,field_name):
+def create_val_infield(nx, ny, nz, field_name):
     """
     Loads an 3D infield that is saved as .npy file and can be used for validation purposes.
     Controls if new fieldsize is equivalent to the original field size.
@@ -44,10 +44,10 @@ def create_val_infield(nx, ny, nz,field_name):
     testfield : Field used for stencil computation
 
     """
-    if os.path.exists("testfields/{}_infield.npy".format(field_name))== False :
+    if os.path.exists("testfields/{}_infield.npy".format(field_name)) == False:
         print("ERROR: Fieldname does not exist yet.")
         exit()
-    
+
     testfield = np.load("testfields/{}_infield.npy".format(field_name))
     if (
         (testfield.shape[0] != nx)
@@ -60,7 +60,7 @@ def create_val_infield(nx, ny, nz,field_name):
     return testfield
 
 
-def save_new_outfield(out_field,field_name):
+def save_new_outfield(out_field, field_name):
     """
     Saves a new Out field to a .npy file.
 
@@ -78,7 +78,7 @@ def save_new_outfield(out_field,field_name):
     print("New output field {} saved.".format(field_name))
 
 
-def validate_outfield(out_field,field_name,stencil_name,backend):
+def validate_outfield(out_field, field_name, stencil_name, backend):
     """
     Reads in the original file and compares it to the current out-field. Validates the results of the stencil computation
 
@@ -92,13 +92,17 @@ def validate_outfield(out_field,field_name,stencil_name,backend):
     valid_var : boolean variable if Validation of array is true/false
 
     """
-    if os.path.exists("testfields/{}_outfield.npy".format(field_name))== False :
+    if os.path.exists("testfields/{}_outfield.npy".format(field_name)) == False:
         print("ERROR: Fieldname does not exist yet.")
         exit()
-    
+
     testfield = np.load("testfields/{}_outfield.npy".format(field_name))
 
     valid_var = np.all(np.allclose(testfield, out_field))
-    print("Field validation for stencil {} in backend {} is: {}.".format(stencil_name, backend, valid_var))
+    print(
+        "Field validation for stencil {} in backend {} is: {}.".format(
+            stencil_name, backend, valid_var
+        )
+    )
 
     return valid_var
