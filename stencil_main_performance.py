@@ -60,7 +60,7 @@ from functions.halo_functions import update_halo, add_halo_points, remove_halo_p
     "--stencil_name",
     type=str,
     required=True, #changed here
-    help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","lapoflap1d", "lapoflap2d", "lapoflap3d", "test_gt4py", "laplacian1d_gt4py", "laplacian2d_gt4py", "laplacian3d_gt4py", "FMA_gt4py", "lapoflap1d_gt4py", "lapoflap2d_gt4py", "lapoflap3d_gt4py", ]',
+    help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","lapoflap1d", "lapoflap2d", "lapoflap3d",]',
 )
 @click.option(
     "--backend",
@@ -135,13 +135,6 @@ def main(
         "lapoflap2d",
         "lapoflap3d",
         "test_gt4py",
-        "laplacian1d_gt4py",
-        "laplacian2d_gt4py", 
-        "laplacian3d_gt4py", 
-        "FMA_gt4py",
-        "lapoflap1d_gt4py",
-        "lapoflap2d_gt4py",
-        "lapoflap3d_gt4py",
     ]
     if stencil_name not in stencil_name_list:
         print(
@@ -186,9 +179,9 @@ def main(
     # expand in_field to contain halo points
     
     #define value of num_halo
-    if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d", "laplacian1d_gt4py", "laplacian2d_gt4py", "laplacian3d_gt4py"): #changed here
+    if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"): #changed here
         num_halo = 1
-    elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d", "test_gt4py", "lapoflap1d_gt4py", "lapoflap2d_gt4py", "lapoflap3d_gt4py"): #changed here
+    elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d", "test_gt4py"): #changed here
         num_halo = 2
     else: #FMA and test
         num_halo = 0
@@ -204,13 +197,13 @@ def main(
     
     # create fields for gt4py #changed here
     if backend == "gt4py":
-        if stencil_name in ["test_gt4py","laplacian3d_gt4py", "lapoflap3d_gt4py"]:
+        if stencil_name in ["test_gt4py","laplacian3d", "lapoflap3d"]:
             origin = (num_halo, num_halo, num_halo)
-        elif stencil_name in ["laplacian1d_gt4py", "lapoflap1d_gt4py"]:
+        elif stencil_name in ["laplacian1d", "lapoflap1d"]:
             origin = (num_halo, 0, 0)
-        elif stencil_name in ["laplacian2d_gt4py", "lapoflap2d_gt4py"]:
+        elif stencil_name in ["laplacian2d", "lapoflap2d"]:
             origin = (num_halo, num_halo, 0)
-        elif stencil_name == "FMA_gt4py":
+        elif stencil_name == "FMA":
             origin = (0, 0, 0)
             
         in_field = gt4py.storage.from_array( 
@@ -273,14 +266,14 @@ def main(
 #             stencil(in_field)
     
     else:  # gt4py  #changed here
-        if stencil_name in ("laplacian1d_gt4py", "laplacian2d_gt4py", "laplacian3d_gt4py", "test_gt4py"):
+        if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d", "test_gt4py"):
             stencil( 
             in_field, 
             out_field, 
             origin=origin, 
             domain=(nx, ny, nz), 
             ) 
-        elif stencil_name == "FMA_gt4py":
+        elif stencil_name == "FMA":
             stencil(
             in_field,
             in_field2,
@@ -289,7 +282,7 @@ def main(
             origin=origin,
             domain=(nx, ny, nz),
             )
-        elif stencil_name in ("lapoflap1_gt4pyd", "lapoflap2d_gt4py", "lapoflap3d_gt4py"):
+        elif stencil_name in ("lapoflap1", "lapoflap2d", "lapoflap3d"):
             stencil( 
             in_field, 
             tmp_field, 
@@ -347,7 +340,7 @@ def main(
 #                 toc = time.time()
     
         else:  # gt4py  #changed here
-            if stencil_name in ("laplacian1d_gt4py", "laplacian2d_gt4py", "laplacian3d_gt4py", "test_gt4py"):
+            if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d", "test_gt4py"):
                 tic = time.time()
                 stencil( 
                 in_field, 
@@ -356,7 +349,7 @@ def main(
                 domain=(nx, ny, nz), 
                 ) 
                 toc = time.time()
-            elif stencil_name == "FMA_gt4py":
+            elif stencil_name == "FMA":
                 tic = time.time()
                 stencil(
                 in_field,
@@ -367,7 +360,7 @@ def main(
                 domain=(nx, ny, nz),
                 )
                 toc = time.time()
-            elif stencil_name in ("lapoflap1_gt4pyd", "lapoflap2d_gt4py", "lapoflap3d_gt4py"):
+            elif stencil_name in ("lapoflap1", "lapoflap2d", "lapoflap3d"):
                 tic = time.time()
                 stencil( 
                 in_field, 
