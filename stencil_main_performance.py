@@ -248,28 +248,29 @@ def main(
         stencil = gt4py.gtscript.stencil(gt4py_backend, stencil) 
     
     #warm-up caches
-    if backend in ("numpy", "numba_vector_function","numba_vector_decorator"):
+    if backend in ("numpy", "numba_vector_function","numba_vector_decorator",
+                   "numba_loop","numba_stencil"):#changed
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-            stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+            stencil(in_field, tmp_field, num_halo=num_halo)#changed
         elif stencil_name == "FMA":
             stencil(
-                in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0
-            )
+                in_field, in_field2, in_field3, tmp_field, num_halo=num_halo
+            )#changed
         elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-            stencil(in_field, tmp_field, out_field, num_halo=2, extend=1)
+            stencil(in_field, tmp_field, out_field, num_halo=2)#changed
         else: #Test
             stencil(in_field)
     
-    elif backend in ("numba_loop","numba_stencil"):
-        if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-            stencil(in_field, tmp_field)
-        elif stencil_name == "FMA":
-            stencil(
-                in_field, in_field2, in_field3, tmp_field)
-        elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-            stencil(in_field, tmp_field, out_field)
-        else: #Test
-            stencil(in_field)
+#     elif backend in ("numba_loop","numba_stencil"):#changed
+#         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
+#             stencil(in_field, tmp_field)
+#         elif stencil_name == "FMA":
+#             stencil(
+#                 in_field, in_field2, in_field3, tmp_field)
+#         elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
+#             stencil(in_field, tmp_field, out_field)
+#         else: #Test
+#             stencil(in_field)
     
     else:  # gt4py  #changed here
         if stencil_name in ("laplacian1d_gt4py", "laplacian2d_gt4py", "laplacian3d_gt4py", "test_gt4py"):
@@ -306,44 +307,44 @@ def main(
     time_list = []
     for i in range(num_iter):
         
-        if backend in ("numpy", "numba_vector_function","numba_vector_decorator"):
+        if backend in ("numpy", "numba_vector_function","numba_vector_decorator","numba_loop","numba_stencil"):#changed
             if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
                 tic = time.time()
-                out_field=stencil(in_field, tmp_field, num_halo=num_halo, extend=0)
+                out_field=stencil(in_field, tmp_field, num_halo=num_halo)#changed
                 toc = time.time()
             elif stencil_name == "FMA":
                 tic = time.time()
                 out_field=stencil(
-                    in_field, in_field2, in_field3, tmp_field, num_halo=num_halo, extend=0
-                )
+                    in_field, in_field2, in_field3, tmp_field, num_halo=num_halo
+                )#changed
                 toc = time.time()
             elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
                 tic = time.time()
-                out_field=stencil(in_field, tmp_field, out_field, num_halo=2, extend=1)
+                out_field=stencil(in_field, tmp_field, out_field, num_halo=2)#changed
                 toc = time.time()
             else: #Test
                 tic = time.time()
                 out_field=stencil(in_field)
                 toc = time.time()
         
-        elif backend in ("numba_loop","numba_stencil"):
-            if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-                tic = time.time()
-                out_field=stencil(in_field, tmp_field)
-                toc = time.time()
-            elif stencil_name == "FMA":
-                tic = time.time()
-                out_field=stencil(
-                    in_field, in_field2, in_field3, tmp_field)
-                toc = time.time()
-            elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                tic = time.time()
-                out_field=stencil(in_field, tmp_field, out_field)
-                toc = time.time()
-            else: #Test
-                tic = time.time()
-                out_field=stencil(in_field)
-                toc = time.time()
+#         elif backend in ("numba_loop","numba_stencil"):#changed
+#             if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
+#                 tic = time.time()
+#                 out_field=stencil(in_field, tmp_field)
+#                 toc = time.time()
+#             elif stencil_name == "FMA":
+#                 tic = time.time()
+#                 out_field=stencil(
+#                     in_field, in_field2, in_field3, tmp_field)
+#                 toc = time.time()
+#             elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
+#                 tic = time.time()
+#                 out_field=stencil(in_field, tmp_field, out_field)
+#                 toc = time.time()
+#             else: #Test
+#                 tic = time.time()
+#                 out_field=stencil(in_field)
+#                 toc = time.time()
     
         else:  # gt4py  #changed here
             if stencil_name in ("laplacian1d_gt4py", "laplacian2d_gt4py", "laplacian3d_gt4py", "test_gt4py"):
