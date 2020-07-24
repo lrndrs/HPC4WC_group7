@@ -1,22 +1,21 @@
 import numpy as np
 from numba import stencil
 
-# @stencil
-# def test(in_field):
-#     """
-#     Simple test function that returns a copy of the in_field.
 
-#     Parameters
-#     ----------
-#     in_field  : input field (nx x ny x nz).
-
-#     Returns
-#     -------
-#     out_field : a copy of the in_field.
-
-#     """
-
-#     return in_field[0,0,0]
+def test(in_field,out_field):
+    """
+    Simple test function that returns a copy of the in_field.
+    
+    Parameters
+    ----------
+    in_field  : input field (nx x ny x nz).
+    
+    Returns
+    -------
+    out_field : a copy of the in_field.
+    
+    """
+    out_field[...] = in_field
 
 
 def laplacian1d(in_field, out_field, num_halo=1):

@@ -107,14 +107,19 @@ def remove_halo_points(field, num_halo):
     """
     Removes halo points to an array on each end (call only once after timeloop before save)
     """
-    dim = field.ndim
-    if dim == 1:
-        out_field = field[num_halo:-num_halo]
+    
+    if num_halo == 0:
+        field[...]=field
+    
+    else:
+        dim = field.ndim
+        if dim == 1:
+            field[...] = field[num_halo:-num_halo]
+    
+        if dim == 2:
+            field[...] = field[num_halo:-num_halo, num_halo:-num_halo]
+    
+        if dim == 3:
+            field[...] = field[num_halo:-num_halo, num_halo:-num_halo, num_halo:-num_halo]
 
-    if dim == 2:
-        out_field = field[num_halo:-num_halo, num_halo:-num_halo]
-
-    if dim == 3:
-        out_field = field[num_halo:-num_halo, num_halo:-num_halo, num_halo:-num_halo]
-
-    return out_field
+    return field
