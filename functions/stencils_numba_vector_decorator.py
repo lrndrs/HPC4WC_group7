@@ -174,7 +174,7 @@ def FMA(in_field, in_field2, in_field3, out_field, num_halo=0):
 
 
 
-@jit(nopython=False)
+@jit(nopython=True)
 def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
     """
     Compute Laplacian of the Laplacian in i-direction using 2nd-order centered differences.
@@ -194,12 +194,12 @@ def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
 
     I,J,K=in_field.shape
     
-    ib = num_halo
-    ie = I-num_halo
-    jb = num_halo
-    je = J-num_halo
-    kb = num_halo
-    ke = K-num_halo
+    ib = num_halo - 1 
+    ie = I-num_halo + 1
+    jb = num_halo - 1 
+    je = J-num_halo + 1
+    kb = num_halo - 1 
+    ke = K-num_halo + 1
 
     tmp_field[ib:ie, jb:je, kb:ke] = (
         -2.0 * in_field[ib:ie, jb:je, kb:ke]
@@ -207,12 +207,12 @@ def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
         + in_field[ib + 1 : ie + 1, jb:je, kb:ke]
     )
 
-    ib = num_halo + 1
-    ie = I-num_halo - 1
-    jb = num_halo + 1
-    je = J-num_halo - 1
-    kb = num_halo + 1
-    ke = K-num_halo - 1
+    ib = num_halo
+    ie = I-num_halo
+    jb = num_halo
+    je = J-num_halo
+    kb = num_halo
+    ke = K-num_halo
     
     out_field[ib:ie, jb:je, kb:ke] = (
         -2.0 * tmp_field[ib:ie, jb:je, kb:ke]
@@ -241,12 +241,12 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     """
     I,J,K=in_field.shape
     
-    ib = num_halo
-    ie = I-num_halo
-    jb = num_halo
-    je = J-num_halo
-    kb = num_halo
-    ke = K-num_halo
+    ib = num_halo - 1 
+    ie = I-num_halo + 1
+    jb = num_halo - 1 
+    je = J-num_halo + 1
+    kb = num_halo - 1 
+    ke = K-num_halo + 1
 
     tmp_field[ib:ie, jb:je, kb:ke] = (
         -4.0 * in_field[ib:ie, jb:je, kb:ke]
@@ -256,12 +256,12 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
         + in_field[ib:ie, jb + 1 : je + 1, kb:ke]
     )
 
-    ib = num_halo + 1
-    ie = I-num_halo - 1
-    jb = num_halo + 1
-    je = J-num_halo - 1
-    kb = num_halo + 1
-    ke = K-num_halo - 1
+    ib = num_halo
+    ie = I-num_halo
+    jb = num_halo
+    je = J-num_halo
+    kb = num_halo
+    ke = K-num_halo
     
     out_field[ib:ie, jb:je, kb:ke] = (
         -4.0 * tmp_field[ib:ie, jb:je, kb:ke]
@@ -272,7 +272,6 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     )
 
     return out_field
-
 
 @jit(nopython=True)
 def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
@@ -294,12 +293,12 @@ def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
 
     I,J,K=in_field.shape
     
-    ib = num_halo
-    ie = I-num_halo
-    jb = num_halo
-    je = J-num_halo
-    kb = num_halo
-    ke = K-num_halo
+    ib = num_halo - 1 
+    ie = I-num_halo + 1
+    jb = num_halo - 1 
+    je = J-num_halo + 1
+    kb = num_halo - 1 
+    ke = K-num_halo + 1
 
     tmp_field[ib:ie, jb:je, kb:ke] = (
         -6.0 * in_field[ib:ie, jb:je, kb:ke]
@@ -311,12 +310,12 @@ def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
         + in_field[ib:ie, jb:je, kb + 1 : ke + 1]
     )
 
-    ib = num_halo + 1
-    ie = I-num_halo - 1
-    jb = num_halo + 1
-    je = J-num_halo - 1
-    kb = num_halo + 1
-    ke = K-num_halo - 1
+    ib = num_halo
+    ie = I-num_halo
+    jb = num_halo
+    je = J-num_halo
+    kb = num_halo
+    ke = K-num_halo
 
     out_field[ib:ie, jb:je, kb:ke] = (
         -6.0 * tmp_field[ib:ie, jb:je, kb:ke]
