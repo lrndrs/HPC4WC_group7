@@ -135,7 +135,20 @@ def main(
         )
         sys.exit(0)
 
-    # TODO: Create check for gt4py_backend
+    gt4py_backend_list = [
+        "numpy", 
+        "gtx86", 
+        "gtmc", 
+        "gtcuda"
+    ]
+    if gt4py_backend not in gt4py_backend_list:
+        print(
+            "please make sure you choose one of the following backends: {}".format(
+                gt4py_backend_list
+            )
+        )
+        sys.exit(0)
+
 
     # alpha = 1.0 / 32.0
     # dim = 3
