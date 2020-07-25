@@ -198,14 +198,7 @@ def main(
 
     # create fields for gt4py #changed here
     if backend == "gt4py":
-        if stencil_name in ["test_gt4py", "laplacian3d", "lapoflap3d"]:
-            origin = (num_halo, num_halo, num_halo)
-        elif stencil_name in ["laplacian1d", "lapoflap1d"]:
-            origin = (num_halo, 0, 0)
-        elif stencil_name in ["laplacian2d", "lapoflap2d"]:
-            origin = (num_halo, num_halo, 0)
-        elif stencil_name == "FMA":
-            origin = (0, 0, 0)
+        origin = (num_halo, num_halo, num_halo)
 
         in_field = gt4py.storage.from_array(
             in_field, gt4py_backend, default_origin=origin
