@@ -196,7 +196,7 @@ def main(
         in_field2 = gt4py.storage.from_array(
             in_field2, gt4py_backend, default_origin=origin
         )
-        in_field3 = gt4py.storage.from_array(  # changed here
+        in_field3 = gt4py.storage.from_array(
             in_field3, gt4py_backend, default_origin=origin
         )
         out_field = gt4py.storage.from_array(
@@ -230,7 +230,7 @@ def main(
         "numba_vector_decorator",
         "numba_loop",
         "numba_stencil",
-    ):  # changed
+    ):  
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
             stencil(in_field, out_field, num_halo=num_halo)
         elif stencil_name == "FMA":
@@ -251,7 +251,7 @@ def main(
     #         else: #Test
     #             stencil(in_field)
 
-    else:  # gt4py  #changed here
+    else:  # gt4py
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d", "test_gt4py"):
             stencil(
                 in_field, out_field, origin=origin, domain=(nx, ny, nz),
