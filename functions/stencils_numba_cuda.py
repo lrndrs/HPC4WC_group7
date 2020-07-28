@@ -7,7 +7,7 @@
 import numpy as np
 from numba import cuda
 
-
+#additional test functions
 @cuda.jit
 def increment_by_one(an_array,another_array):
     pos = cuda.grid(1)
@@ -49,7 +49,7 @@ def test(in_field,out_field):
        out_field[x,y,z] = in_field[x,y,z] 
 
 
-
+@cuda.jit
 def laplacian1d(in_field, out_field, num_halo=1):
     """Compute Laplacian using 2nd-order centered differences with an explicit nested loop in numba.
     
@@ -64,21 +64,13 @@ def laplacian1d(in_field, out_field, num_halo=1):
     out_field : in_field with Laplacian computed in i-direction.
     
     """
+    
+    i, j, k = cuda.grid(3)
+    if i>=num_halo and j>=num_halo and k>=num_halo and i < in_field.shape[0]-num_halo and j < in_field.shape[1]-num_halo and k < in_field.shape[2]-num_halo:
+        out_field[i, j, k] = (
+            -2.0 * in_field[i, j, k] + in_field[i-1, j, k] + in_field[i+1, j, k])
 
-    I, J, K = in_field.shape
-
-    for i in range(num_halo, I - num_halo):
-        for j in range(num_halo, J - num_halo):
-            for k in range(num_halo, K - num_halo):
-                out_field[i, j, k] = (
-                    -2.0 * in_field[i, j, k]
-                    + in_field[i - 1, j, k]
-                    + in_field[i + 1, j, k]
-                )
-
-    return out_field
-
-
+@cuda.jit
 def laplacian2d(in_field, out_field, num_halo=1):
     """
     Compute Laplacian using 2nd-order centered differences with an explicit nested loop in numba.
@@ -94,22 +86,18 @@ def laplacian2d(in_field, out_field, num_halo=1):
     out_field : in_field with Laplacian computed in i- and j-direction (horizontal Laplacian).
     
     """
-    I, J, K = in_field.shape
+    i, j, k = cuda.grid(3)
+    if i>=num_halo and j>=num_halo and k>=num_halo and i < in_field.shape[0]-num_halo and j < in_field.shape[1]-num_halo and k < in_field.shape[2]-num_halo:
+        out_field[i, j, k] = (
+            -4.0 * in_field[i, j, k]
+            + in_field[i-1, j, k]
+            + in_field[i+1, j, k]
+            + in_field[i, j-1, k]
+            + in_field[i, j+1, k]
+        )
+        
 
-    for i in range(num_halo, I - num_halo):
-        for j in range(num_halo, J - num_halo):
-            for k in range(num_halo, K - num_halo):
-                out_field[i, j, k] = (
-                    -4.0 * in_field[i, j, k]
-                    + in_field[i - 1, j, k]
-                    + in_field[i + 1, j, k]
-                    + in_field[i, j - 1, k]
-                    + in_field[i, j + 1, k]
-                )
-
-    return out_field
-
-
+@cuda.jit
 def laplacian3d(in_field, out_field, num_halo=1):
     """
     Compute Laplacian using 2nd-order centered differences with an explicit nested loop in numba.
@@ -126,11 +114,8 @@ def laplacian3d(in_field, out_field, num_halo=1):
     
     """
 
-    I, J, K = in_field.shape
-
-    for i in range(num_halo, I - num_halo):
-        for j in range(num_halo, J - num_halo):
-            for k in range(num_halo, K - num_halo):
+    i, j, k = cuda.grid(3)
+    if i>=num_halo and j>=num_halo and k>=num_halo and i < in_field.shape[0]-num_halo and j < in_field.shape[1]-num_halo and k < in_field.shape[2]-num_halo:
                 out_field[i, j, k] = (
                     -6.0 * in_field[i, j, k]
                     + in_field[i - 1, j, k]
@@ -141,9 +126,9 @@ def laplacian3d(in_field, out_field, num_halo=1):
                     + in_field[i, j, k + 1]
                 )
 
-    return out_field
 
 
+@cuda.jit
 def FMA(in_field, in_field2, in_field3, out_field, num_halo=0):
     """
     Pointwise stencil to test for fused multiply-add with an explicit nested loop in numba.
@@ -160,19 +145,15 @@ def FMA(in_field, in_field2, in_field3, out_field, num_halo=0):
     
     """
 
-    I, J, K = in_field.shape
-
-    for i in range(num_halo, I - num_halo):
-        for j in range(num_halo, J - num_halo):
-            for k in range(num_halo, K - num_halo):
+    i, j, k = cuda.grid(3)
+    if i>=num_halo and j>=num_halo and k>=num_halo and i < in_field.shape[0]-num_halo and j < in_field.shape[1]-num_halo and k < in_field.shape[2]-num_halo:
 
                 out_field[i, j, k] = (
                     in_field[i, j, k] + in_field2[i, j, k] * in_field3[i, j, k]
                 )
 
-    return out_field
 
-
+@cuda.jit
 def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
     """
     Compute Laplacian in i-direction using 2nd-order centered differences with an explicit nested loop in numba.
@@ -190,29 +171,28 @@ def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
     
     """
 
-    I, J, K = in_field.shape
+    i, j, k = cuda.grid(3)
+    if i>=num_halo-1 and j>=num_halo-1 and k>=num_halo-1 and i < in_field.shape[0]-(num_halo-1) and j < in_field.shape[1]-(num_halo-1) and k < in_field.shape[2]-(num_halo-1):
 
-    for i in range(num_halo - 1, I - num_halo + 1):
-        for j in range(num_halo - 1, J - num_halo + 1):
-            for k in range(num_halo - 1, K - num_halo + 1):
                 tmp_field[i, j, k] = (
                     -2.0 * in_field[i, j, k]
                     + in_field[i - 1, j, k]
                     + in_field[i + 1, j, k]
                 )
 
-    for i in range(num_halo, I - num_halo):
-        for j in range(num_halo, J - num_halo):
-            for k in range(num_halo, K - num_halo):
+    # Wait until all threads finish preloading
+    cuda.syncthreads()
+    
+    if i>=num_halo and j>=num_halo and k>=num_halo and i < in_field.shape[0]-(num_halo) and j < in_field.shape[1]-(num_halo) and k < in_field.shape[2]-(num_halo):
+
                 out_field[i, j, k] = (
                     -2.0 * tmp_field[i, j, k]
                     + tmp_field[i - 1, j, k]
                     + tmp_field[i + 1, j, k]
                 )
 
-    return out_field
 
-
+@cuda.jit
 def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     """
     Compute Laplacian of the Laplacian in i and j-direction using 2nd-order centered differences with an explicit nested loop in numba.
@@ -230,11 +210,8 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     
     """
 
-    I, J, K = in_field.shape
-
-    for i in range(num_halo - 1, I - num_halo + 1):
-        for j in range(num_halo - 1, J - num_halo + 1):
-            for k in range(num_halo - 1, K - num_halo + 1):
+    i, j, k = cuda.grid(3)
+    if i>=num_halo-1 and j>=num_halo-1 and k>=num_halo-1 and i < in_field.shape[0]-(num_halo-1) and j < in_field.shape[1]-(num_halo-1) and k < in_field.shape[2]-(num_halo-1):
                 tmp_field[i, j, k] = (
                     -4.0 * in_field[i, j, k]
                     + in_field[i - 1, j, k]
@@ -243,9 +220,9 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
                     + in_field[i, j + 1, k]
                 )
 
-    for i in range(num_halo, I - num_halo):
-        for j in range(num_halo, J - num_halo):
-            for k in range(num_halo, K - num_halo):
+    cuda.syncthreads()
+    
+    if i>=num_halo and j>=num_halo and k>=num_halo and i < in_field.shape[0]-(num_halo) and j < in_field.shape[1]-(num_halo) and k < in_field.shape[2]-(num_halo):
                 out_field[i, j, k] = (
                     -4.0 * tmp_field[i, j, k]
                     + tmp_field[i - 1, j, k]
@@ -254,9 +231,9 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
                     + tmp_field[i, j + 1, k]
                 )
 
-    return out_field
+    
 
-
+@cuda.jit
 def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
     """
     Compute Laplacian of the Laplacian in i,j,k-direction using 2nd-order centered differences with an explicit nested loop in numba.
@@ -273,11 +250,9 @@ def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
     out_field : in_field with Laplacian of the Laplacian computed in i-, j- and k- direction.
     
     """
-    I, J, K = in_field.shape
-
-    for i in range(num_halo - 1, I - num_halo + 1):
-        for j in range(num_halo - 1, J - num_halo + 1):
-            for k in range(num_halo - 1, K - num_halo + 1):
+    
+    i, j, k = cuda.grid(3)
+    if i>=num_halo-1 and j>=num_halo-1 and k>=num_halo-1 and i < in_field.shape[0]-(num_halo-1) and j < in_field.shape[1]-(num_halo-1) and k < in_field.shape[2]-(num_halo-1):
                 tmp_field[i, j, k] = (
                     -6.0 * in_field[i, j, k]
                     + in_field[i - 1, j, k]
@@ -288,9 +263,9 @@ def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
                     + in_field[i, j, k + 1]
                 )
 
-    for i in range(num_halo, I - num_halo):
-        for j in range(num_halo, J - num_halo):
-            for k in range(num_halo, K - num_halo):
+    cuda.syncthreads()
+    
+    if i>=num_halo and j>=num_halo and k>=num_halo and i < in_field.shape[0]-(num_halo) and j < in_field.shape[1]-(num_halo) and k < in_field.shape[2]-(num_halo):
                 out_field[i, j, k] = (
                     -6.0 * tmp_field[i, j, k]
                     + tmp_field[i - 1, j, k]
@@ -301,4 +276,3 @@ def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
                     + tmp_field[i, j, k + 1]
                 )
 
-    return out_field

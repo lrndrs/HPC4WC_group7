@@ -30,11 +30,6 @@ from functions import stencils_numba_cuda
 from functions import stencils_gt4py
 
 
-# from functions.gt4py_numpy import test_gt4py
-# import gt4py
-# import gt4py.gtscript as gtscript
-# import gt4py.storage as gt_storage
-
 
 @click.command()
 @click.option(
@@ -80,6 +75,12 @@ from functions import stencils_gt4py
     help="True to enable parallel execution of Numba stencils.",
 )
 @click.option(
+    "--numba_cudadevice",
+    type=bool,
+    default=False,
+    help="True to enable storage allocation on GPU.",
+)
+@click.option(
     "--gt4py_backend",
     type=str,
     default="numpy",
@@ -95,6 +96,7 @@ def main(
     create_field=True,
     field_name="test",
     numba_parallel=False,
+    numba_cudadevice=False,
     gt4py_backend="numpy",
 ):
     """Field validation driver for high-level comparison of stencil computation in python."""
@@ -162,10 +164,6 @@ def main(
         sys.exit(0)
 
 
-
-    # alpha = 1.0 / 32.0
-    # dim = 3
-
     # create field for validation
     if create_field == True:
         in_field = field_validation.create_new_infield(nx, ny, nz, field_name)
@@ -206,7 +204,7 @@ def main(
     tmp_field = np.ones_like(in_field)
     out_field = np.ones_like(in_field)
     
-    #print('new in_field:',in_field) #for debug
+    print('new in_field:',in_field) #for debug
     #print('new out_field:',out_field) #for debug
     
     # create threads for numba_cuda:
@@ -290,7 +288,14 @@ def main(
     #             stencil(in_field)
     
     elif backend =="numba_cuda":
-        stencil[blockspergrid, threadsperblock](in_field,out_field)
+        if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
+            stencil[blockspergrid, threadsperblock](in_field, out_field, num_halo)
+        elif stencil_name == "FMA":
+            stencil[blockspergrid, threadsperblock](in_field, in_field2, in_field3, out_field, num_halo)
+        elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
+            stencil[blockspergrid, threadsperblock](in_field, tmp_field, out_field, num_halo)
+        else:  # Test        
+            stencil[blockspergrid, threadsperblock](in_field,out_field)
     
     else:  # gt4py
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d", "test_gt4py"):
@@ -312,7 +317,7 @@ def main(
             )
     #     #else: test
     
-    #print('Stencil Outfield',out_field) #for debug
+    print('Stencil Outfield',out_field) #for debug
     
     # delete halo from out_field #removed 
     #out_field = remove_halo_points(out_field, num_halo)
