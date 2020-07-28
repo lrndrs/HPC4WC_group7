@@ -163,13 +163,13 @@ def main(
         )
         sys.exit(0)
         
-    if gt4py_backend == "numpy" and stencil_name in ["lapoflap1d", "lapoflap2d", "lapoflap3d"]:
-        print(
-            "right now gt4py does not work for {} and lapoflapxd because of the removal of the temporary field".format(
-                gt4py_backend
-            )
-        )
-        sys.exit(0)
+    #if gt4py_backend == "numpy" and stencil_name in ["lapoflap1d", "lapoflap2d", "lapoflap3d"]:
+    #    print(
+    #        "right now gt4py does not work for {} and lapoflapxd because of the removal of the temporary field".format(
+    #            gt4py_backend
+    #        )
+    #    )
+    #    sys.exit(0)
 
     # alpha = 1.0 / 32.0
     # dim = 3
@@ -305,6 +305,7 @@ def main(
     # time the actual work
     # Call the stencil chosen in stencil_name
     time_list = []
+    num_iter +=1
     for i in range(num_iter):
         
         update_halo( in_field, num_halo )
@@ -390,9 +391,9 @@ def main(
         if i < num_iter - 1: #swap fields
             in_field, out_field = out_field, in_field
 
-    time_avg = np.average(time_list)
-    time_stdev = np.std(time_list)
-    time_total = sum(time_list)
+    time_avg = np.average(time_list[1:])
+    time_stdev = np.std(time_list[1:])
+    time_total = sum(time_list[1:])
 
     print(
         "Total worktime: {} s. In {} iteration(s) the average lapsed time for one run is {} +/- {} s".format(
@@ -401,7 +402,7 @@ def main(
     )
 
     if num_iter >= 20:
-        time_avg_first_10 = sum(time_list[0:10]) / 10
+        time_avg_first_10 = sum(time_list[1:11]) / 10
         time_avg_last_10 = sum(time_list[-11:-1]) / 10
         print(
             "The average elapsed time of the first 10 run is {} and of the last 10 values is {}".format(
@@ -414,8 +415,8 @@ def main(
 
     # Save into df for further processing
     # Save runtimes
-    if save_runtime:
-        serialization.save_runtime_as_df(time_list)
+    if (save_runtime==True):
+        serialization.save_runtime_as_df(time_list[1:])
         print("Individual runtime saved in dataframe.")
 
     # Append row with calculated work to df

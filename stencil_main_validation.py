@@ -293,7 +293,7 @@ def main(
             )
     #     #else: test
     
-    print('Stencil Outfield',out_field) #for debug
+    #print('Stencil Outfield',out_field) #for debug
     
     # delete halo from out_field #removed 
     #out_field = remove_halo_points(out_field, num_halo)
