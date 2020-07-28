@@ -10,7 +10,8 @@ import numpy as np
 import click
 import matplotlib
 import sys
-from numba import njit
+import math
+from numba import njit,cuda
 import gt4py
 import gt4py.gtscript as gtscript
 import gt4py.storage as gt_storage
@@ -25,7 +26,9 @@ from functions import stencils_numpy
 from functions import stencils_numba_vector_decorator
 from functions import stencils_numba_loop
 from functions import stencils_numba_stencil
+from functions import stencils_numba_cuda
 from functions import stencils_gt4py
+
 
 # from functions.gt4py_numpy import test_gt4py
 # import gt4py
@@ -53,7 +56,7 @@ from functions import stencils_gt4py
     "--backend",
     type=str,
     required=True,
-    help='Options are ["numpy", "numba_vector_function", "numba_vector_decorator", numba_loop", "numba_stencil", "numbavectorize", "gt4py"]',
+    help='Options are ["numpy", "numba_vector_function", "numba_vector_decorator", numba_loop","numba_cuda", "numba_stencil", "numbavectorize", "gt4py"]',
 )
 @click.option(
     "--plot_result", type=bool, default=False, help="Make a plot of the result?"
@@ -125,6 +128,7 @@ def main(
         "numba_vector_decorator",
         "numba_loop",
         "numba_stencil",
+        "numba_cuda",
         "gt4py",
     ]
     if backend not in backend_list:
@@ -149,7 +153,7 @@ def main(
         )
         sys.exit(0)
 
-    if gt4py_backend == "numpy" and stencil_name in ["lapoflap1d", "lapoflap2d", "lapoflap3d"]:
+    if backend == "gt4py" and gt4py_backend == "numpy" and stencil_name in ["lapoflap1d", "lapoflap2d", "lapoflap3d"]:
         print(
             "right now gt4py does not work for {} and lapoflapxd because of the removal of the temporary field".format(
                 gt4py_backend
@@ -197,14 +201,24 @@ def main(
         plt.close()
 
     # create additional fields
-    in_field2 = np.ones_like(in_field)
+    in_field2 = np.ones_like(in_field) * 2.1
     in_field3 = np.ones_like(in_field) * 4.2
     tmp_field = np.ones_like(in_field)
     out_field = np.ones_like(in_field)
     
     #print('new in_field:',in_field) #for debug
     #print('new out_field:',out_field) #for debug
-
+    
+    # create threads for numba_cuda:
+    if backend == "numba_cuda":
+        threadsperblock = (8,8,8)
+        
+        blockspergrid_x = math.ceil(in_field.shape[0] / threadsperblock[0])
+        blockspergrid_y = math.ceil(in_field.shape[1] / threadsperblock[1])
+        blockspergrid_z = math.ceil(in_field.shape[2] / threadsperblock[2])
+        blockspergrid = (blockspergrid_x, blockspergrid_y, blockspergrid_z)
+        
+    
     # create fields for gt4py
     if backend == "gt4py":
         origin = (num_halo, num_halo, num_halo)
@@ -241,6 +255,8 @@ def main(
     elif backend == "numba_stencil":
         stencil = eval(f"stencils_numba_stencil.{stencil_name}")
         stencil = njit(stencil, parallel=numba_parallel)
+    elif backend == "numba_cuda":
+        stencil = eval(f"stencils_numba_cuda.{stencil_name}")
     else:  # gt4py
         stencil = eval(f"stencils_gt4py.{stencil_name}")
         stencil = gt4py.gtscript.stencil(gt4py_backend, stencil)
@@ -272,7 +288,10 @@ def main(
     #             stencil(in_field, tmp_field, out_field)
     #         else: #Test
     #             stencil(in_field)
-
+    
+    elif backend =="numba_cuda":
+        stencil[blockspergrid, threadsperblock](in_field,out_field)
+    
     else:  # gt4py
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d", "test_gt4py"):
             stencil(
