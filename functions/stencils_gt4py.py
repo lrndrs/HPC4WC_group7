@@ -72,7 +72,6 @@ def FMA(
 
 def lapoflap1d(
     in_field: gtscript.Field[dtype],
-    tmp_field: gtscript.Field[dtype],
     out_field: gtscript.Field[dtype],
 ):
     with computation(PARALLEL), interval(...):
@@ -87,7 +86,6 @@ def lapoflap1d(
 
 def lapoflap2d(
     in_field: gtscript.Field[dtype],
-    tmp_field: gtscript.Field[dtype],
     out_field: gtscript.Field[dtype],
 ):
     with computation(PARALLEL), interval(...):
@@ -111,12 +109,11 @@ def lapoflap2d(
 
 def lapoflap3d(
     in_field: gtscript.Field[dtype],
-    tmp_field: gtscript.Field[dtype],
     out_field: gtscript.Field[dtype],
 ):
     with computation(PARALLEL), interval(...):
 
-        tmp_field[0, 0, 0] = (
+        tmp_field = (
             -6.0 * in_field[0, 0, 0]
             + in_field[-1, 0, 0]
             + in_field[1, 0, 0]
@@ -126,7 +123,7 @@ def lapoflap3d(
             + in_field[0, 0, 1]
         )
 
-        out_field[0, 0, 0] = (
+        out_field = (
             -6.0 * tmp_field[0, 0, 0]
             + tmp_field[-1, 0, 0]
             + tmp_field[1, 0, 0]

@@ -149,6 +149,15 @@ def main(
         )
         sys.exit(0)
 
+    if gt4py_backend == "numpy" and stencil_name in ["lapoflap1d", "lapoflap2d", "lapoflap3d"]:
+        print(
+            "right now gt4py does not work for {} and lapoflapxd because of the removal of the temporary field".format(
+                gt4py_backend
+            )
+        )
+        sys.exit(0)
+
+
 
     # alpha = 1.0 / 32.0
     # dim = 3
@@ -280,11 +289,11 @@ def main(
             )
         elif stencil_name in ("lapoflap1", "lapoflap2d", "lapoflap3d"):
             stencil(
-                in_field, tmp_field, out_field, origin=origin, domain=(nx, ny, nz),
+                in_field, out_field, origin=origin, domain=(nx, ny, nz),
             )
     #     #else: test
     
-    #print('Stencil Outfield',out_field) #for debug
+    print('Stencil Outfield',out_field) #for debug
     
     # delete halo from out_field #removed 
     #out_field = remove_halo_points(out_field, num_halo)
