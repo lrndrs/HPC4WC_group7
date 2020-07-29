@@ -24,7 +24,7 @@ def add_data(
     run_last10,
 ):
     """
-    Appends a row with several variables to the CSV performance report.
+    Appends a row with several variables to the DataFrame performance report.
 
     Parameters
     ----------

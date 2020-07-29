@@ -26,7 +26,7 @@ def test(in_field,out_field):
 
 
 def laplacian1d(in_field, out_field, num_halo=1):
-    """Compute Laplacian using 2nd-order centered differences with an explicit nested loop in numba.
+    """Compute Laplacian using 2nd-order centered differences with an explicit loop nest in numba.
     
     Parameters
     ----------
@@ -56,7 +56,7 @@ def laplacian1d(in_field, out_field, num_halo=1):
 
 def laplacian2d(in_field, out_field, num_halo=1):
     """
-    Compute Laplacian using 2nd-order centered differences with an explicit nested loop in numba.
+    Compute Laplacian using 2nd-order centered differences with an explicit loop nest in numba.
     
     Parameters
     ----------
@@ -87,7 +87,7 @@ def laplacian2d(in_field, out_field, num_halo=1):
 
 def laplacian3d(in_field, out_field, num_halo=1):
     """
-    Compute Laplacian using 2nd-order centered differences with an explicit nested loop in numba.
+    Compute Laplacian using 2nd-order centered differences with an explicit loop nest in numba.
     
     Parameters
     ----------
@@ -121,7 +121,7 @@ def laplacian3d(in_field, out_field, num_halo=1):
 
 def FMA(in_field, in_field2, in_field3, out_field, num_halo=0):
     """
-    Pointwise stencil to test for fused multiply-add with an explicit nested loop in numba.
+    Pointwise stencil to test for fused multiply-add with an explicit loop nest in numba.
     
     Parameters
     ----------
@@ -150,7 +150,7 @@ def FMA(in_field, in_field2, in_field3, out_field, num_halo=0):
 
 def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
     """
-    Compute Laplacian in i-direction using 2nd-order centered differences with an explicit nested loop in numba.
+    Compute Laplacian in i-direction using 2nd-order centered differences with an explicit loop nest in numba.
     
     Parameters
     ----------
@@ -161,7 +161,7 @@ def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
     
     Returns
     -------
-    out_field  : in_field with Laplacian of the Laplacian computed in i-direction.
+    out_field  : Laplacian-of-Laplacian of the input field computed in i-direction
     
     """
 
@@ -190,7 +190,7 @@ def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
 
 def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     """
-    Compute Laplacian of the Laplacian in i and j-direction using 2nd-order centered differences with an explicit nested loop in numba.
+    Compute Laplacian of the Laplacian in i and j-direction using 2nd-order centered differences with an explicit loop nest in numba.
     
     Parameters
     ----------
@@ -201,7 +201,7 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     
     Returns
     -------
-    out_field  : in_field with Laplacian of the Laplacian computed in i- and j-direction (horizontally).
+    out_field  : Laplacian-of-Laplacian of the input field computed in i- and j-direction (horizontally).
     
     """
 
@@ -234,7 +234,7 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
 
 def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
     """
-    Compute Laplacian of the Laplacian in i,j,k-direction using 2nd-order centered differences with an explicit nested loop in numba.
+    Compute Laplacian of the Laplacian in i,j,k-direction using 2nd-order centered differences with an explicit loop nest in numba.
     
     Parameters
     ----------
@@ -245,8 +245,7 @@ def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
     
     Returns
     -------
-    out_field : in_field with Laplacian of the Laplacian computed in i-, j- and k- direction.
-    
+    out_field  : Laplacian-of-Laplacian of the input field computed in i-, j- and k- direction.
     """
     I, J, K = in_field.shape
 

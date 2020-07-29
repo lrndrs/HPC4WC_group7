@@ -64,7 +64,7 @@ def laplacian2d(in_field, out_field, num_halo=1):
     
     Returns
     -------
-    out_field : in_field with Laplacian computed in i-direction.
+    out_field : in_field with Laplacian computed in i- and j-direction (horizontal Laplacian).
     
     """
     # closure inlining
@@ -104,7 +104,7 @@ def laplacian3d(in_field, out_field, num_halo=1):
     
     Returns
     -------
-    out_field : in_field with Laplacian computed in i-direction.
+    out_field : in_field with Laplacian computed in i-, j- and k- direction (full Laplacian).
     
     """
     # closure inlining
@@ -181,7 +181,7 @@ def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
     
     Returns
     -------
-    out_field  : in_field with Laplacian of the Laplacian computed in i-direction.
+    out_field  : Laplacian-of-Laplacian of the input field computed in i-direction.
     
     """
     # closure inlining
@@ -224,7 +224,7 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     
     Returns
     -------
-    out_field  : in_field with Laplacian of the Laplacian computed in i-direction.
+    out_field  : Laplacian-of-Laplacian of the input field computed in i- and j-direction (horizontally).
     
     """
     # closure inlining
@@ -273,7 +273,7 @@ def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
     
     Returns
     -------
-    out_field  : in_field with Laplacian of the Laplacian computed in i-direction.
+    out_field  : Laplacian-of-Laplacian of the input field computed in i-, j- and k- direction.
     
     """
     # closure inlining
