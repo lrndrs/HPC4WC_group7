@@ -15,6 +15,7 @@ from numba import njit,cuda
 import gt4py
 import gt4py.gtscript as gtscript
 import gt4py.storage as gt_storage
+import cupy as cp
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -51,7 +52,7 @@ from functions import stencils_gt4py
     "--backend",
     type=str,
     required=True,
-    help='Options are ["numpy", "numba_vector_function", "numba_vector_decorator", numba_loop","numba_cuda", "numba_stencil", "numbavectorize", "gt4py"]',
+    help='Options are ["numpy", "numba_vector_function", "numba_vector_decorator", numba_loop","numba_cuda", "numba_stencil", "numbavectorize", "gt4py", "cupy"]',
 )
 @click.option(
     "--plot_result", type=bool, default=False, help="Make a plot of the result?"
@@ -132,6 +133,7 @@ def main(
         "numba_stencil",
         "numba_cuda",
         "gt4py",
+        "cupy"
     ]
     if backend not in backend_list:
         print(
@@ -141,27 +143,28 @@ def main(
         )
         sys.exit(0)
 
-    gt4py_backend_list = [
-        "numpy", 
-        "gtx86", 
-        "gtmc", 
-        "gtcuda"
-    ]
-    if gt4py_backend not in gt4py_backend_list:
-        print(
-            "please make sure you choose one of the following backends: {}".format(
-                gt4py_backend_list
+    if backend == "gt4py":
+        gt4py_backend_list = [
+            "numpy", 
+            "gtx86", 
+            "gtmc", 
+            "gtcuda"
+        ]
+        if gt4py_backend not in gt4py_backend_list:
+            print(
+                "please make sure you choose one of the following backends: {}".format(
+                    gt4py_backend_list
+                )
             )
-        )
-        sys.exit(0)
+            sys.exit(0)
 
-    if backend == "gt4py" and gt4py_backend == "numpy" and stencil_name in ["lapoflap1d", "lapoflap2d", "lapoflap3d"]:
-        print(
-            "right now gt4py does not work for {} and lapoflapxd because of the removal of the temporary field".format(
-                gt4py_backend
+        if gt4py_backend == "numpy" and stencil_name in ["lapoflap1d", "lapoflap2d", "lapoflap3d"]:
+            print(
+                "right now gt4py does not work for {} and lapoflapxd because of the removal of the temporary field".format(
+                    gt4py_backend
+                )
             )
-        )
-        sys.exit(0)
+            sys.exit(0)
 
 
     # create field for validation
@@ -183,7 +186,6 @@ def main(
         num_halo = 0
     
     #print('nr of halo=',num_halo) #for debug
-
     in_field = add_halo_points(in_field, num_halo)
     #print('add_halo_Points:',in_field) #for debug
     in_field = update_halo(in_field, num_halo)
@@ -204,7 +206,7 @@ def main(
     tmp_field = np.ones_like(in_field)
     out_field = np.ones_like(in_field)
     
-    print('new in_field:',in_field) #for debug
+    #print('new in_field:',in_field) #for debug
     #print('new out_field:',out_field) #for debug
     
     # create threads for numba_cuda:
@@ -236,6 +238,14 @@ def main(
         out_field = gt4py.storage.from_array(
             out_field, gt4py_backend, default_origin=origin
         )
+        
+    # create fields for cupy
+    if backend == "cupy":
+        in_field = cp.array(in_field)
+        tmp_field = cp.array(tmp_field)
+        in_field2 = cp.array(in_field2)
+        in_field3 = cp.array(in_field3)
+        out_field = cp.array(out_field)
 
     # ----
 
@@ -255,9 +265,11 @@ def main(
         stencil = njit(stencil, parallel=numba_parallel)
     elif backend == "numba_cuda":
         stencil = eval(f"stencils_numba_cuda.{stencil_name}")
-    else:  # gt4py
+    elif backend == "gt4py":
         stencil = eval(f"stencils_gt4py.{stencil_name}")
         stencil = gt4py.gtscript.stencil(gt4py_backend, stencil)
+    else: #cupy
+        stencil = eval(f"stencils_numpy.{stencil_name}")
 
     # warm-up caches (and run stencil computation one time)
     if backend in (
@@ -266,6 +278,7 @@ def main(
         "numba_vector_decorator",
         "numba_loop",
         "numba_stencil",
+        "cupy",
     ):  
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
             stencil(in_field, out_field, num_halo=num_halo)
@@ -317,10 +330,14 @@ def main(
             )
     #     #else: test
     
-    print('Stencil Outfield',out_field) #for debug
+    #print('Stencil Outfield',out_field) #for debug
     
     # delete halo from out_field #removed 
     #out_field = remove_halo_points(out_field, num_halo)
+    
+    # convert fields back into numpy arrays
+    if backend == "cupy":
+        out_field = cp.asnumpy(out_field)
 
     # Save or validate Outfield
     if create_field == True:
