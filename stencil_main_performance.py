@@ -145,6 +145,7 @@ def main(
         "numba_stencil",
         "numba_cuda",
         "gt4py",
+        "cupy",
     ]
     if backend not in backend_list:
         print(
@@ -257,9 +258,11 @@ def main(
         stencil = njit(stencil, parallel=numba_parallel)
     elif backend == "numba_cuda":
         stencil = eval(f"stencils_numba_cuda.{stencil_name}")
-    else:  # gt4py
+    elif backend == "gt4py": 
         stencil = eval(f"stencils_gt4py.{stencil_name}")
         stencil = gt4py.gtscript.stencil(gt4py_backend, stencil)
+    else: #cupy
+        stencil = eval(f"stencils_numpy.{stencil_name}")
 
     # warm-up caches
     if backend in (
@@ -268,13 +271,14 @@ def main(
         "numba_vector_decorator",
         "numba_loop",
         "numba_stencil",
+        "cupy",
     ):
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-            stencil(in_field, out_field, num_halo=num_halo)  # changed
+            stencil(in_field, out_field, num_halo)  # changed
         elif stencil_name == "FMA":
-            stencil(in_field, in_field2, in_field3, out_field, num_halo=num_halo) 
+            stencil(in_field, in_field2, in_field3, out_field, num_halo) 
         elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-            stencil(in_field, tmp_field, out_field, num_halo=num_halo)  # changed
+            stencil(in_field, tmp_field, out_field, num_halo)  # changed
         else:  # Test
             stencil(in_field,out_field)
     
@@ -334,6 +338,7 @@ def main(
             "numba_vector_decorator",
             "numba_loop",
             "numba_stencil",
+            "cupy"
         ):  # changed
             if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
                 tic = time.time()
