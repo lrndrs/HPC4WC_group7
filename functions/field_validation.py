@@ -99,12 +99,15 @@ def validate_outfield(out_field, field_name, stencil_name, backend):
     testfield = np.load("testfields/{}_outfield.npy".format(field_name))
 
     #print('Testfield', testfield) #for debug
-
-    valid_var = np.all(np.allclose(testfield, out_field,equal_nan=True))
-    print(
-        "Field validation for stencil {} in backend {} is: {}.".format(
-            stencil_name, backend, valid_var
+    if testfield.shape != out_field.shape:
+        print('WARNING: Outfield and testfield shapes are not equal.')
+        valid_var = 0
+    else:
+        valid_var = np.all(np.allclose(testfield, out_field,equal_nan=True))
+        print(
+            "Field validation for stencil {} in backend {} is: {}.".format(
+                stencil_name, backend, valid_var
+            )
         )
-    )
 
     return valid_var

@@ -15,7 +15,6 @@ from numba import njit, cuda
 import gt4py
 import gt4py.gtscript as gtscript
 import gt4py.storage as gt_storage
-import cupy as cp
 
 
 # matplotlib.use("Agg")
@@ -62,7 +61,7 @@ from functions.halo_functions import update_halo, add_halo_points, remove_halo_p
     "--backend",
     type=str,
     required=True,
-    help='Options are ["numpy", "numba_vector_function", "numba_vector_decorator", numba_loop", "numba_stencil", "numbavectorize", "gt4py", "cupy"]',
+    help='Options are ["numpy", "numba_vector_function", "numba_vector_decorator", numba_loop", "numba_stencil", "numbavectorize", "gt4py"]',
 )
 @click.option(
     "--num_iter", type=int, default=1, help="Number of iterations",
@@ -146,7 +145,6 @@ def main(
         "numba_stencil",
         "numba_cuda",
         "gt4py",
-        "cupy"
     ]
     if backend not in backend_list:
         print(
@@ -216,6 +214,13 @@ def main(
         blockspergrid_z = math.ceil(in_field.shape[2] / threadsperblock[2])
         blockspergrid = (blockspergrid_x, blockspergrid_y, blockspergrid_z)
 
+        if numba_cudadevice:
+            in_field_d = cuda.to_device(in_field)
+            in_field2_d = cuda.to_device(in_field2)
+            in_fiel3_d = cuda.to_device(in_field3)
+            out_field_d = cuda.to_device(out_field)
+    
+
     # create fields for gt4py #changed here
     if backend == "gt4py":
         origin = (num_halo, num_halo, num_halo)
@@ -235,14 +240,6 @@ def main(
         out_field = gt4py.storage.from_array(
             out_field, gt4py_backend, default_origin=origin
         )
-    
-    # create fields for cupy
-    if backend == "cupy":
-        in_field = cp.array(in_field)
-        tmp_field = cp.array(tmp_field)
-        in_field2 = cp.array(in_field2)
-        in_field3 = cp.array(in_field3)
-        out_field = cp.array(out_field)
 
     # import and possibly compile proper stencil object
     if backend == "numpy":
@@ -260,11 +257,9 @@ def main(
         stencil = njit(stencil, parallel=numba_parallel)
     elif backend == "numba_cuda":
         stencil = eval(f"stencils_numba_cuda.{stencil_name}")
-    elif backend == "gt4py":
+    else:  # gt4py
         stencil = eval(f"stencils_gt4py.{stencil_name}")
         stencil = gt4py.gtscript.stencil(gt4py_backend, stencil)
-    else: #cupy
-        stencil = eval(f"stencils_numpy.{stencil_name}")
 
     # warm-up caches
     if backend in (
@@ -273,7 +268,6 @@ def main(
         "numba_vector_decorator",
         "numba_loop",
         "numba_stencil",
-        "cupy",
     ):
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
             stencil(in_field, out_field, num_halo=num_halo)  # changed
@@ -285,14 +279,25 @@ def main(
             stencil(in_field,out_field)
     
     elif backend =="numba_cuda":
-        if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-            stencil[blockspergrid, threadsperblock](in_field, out_field, num_halo)
-        elif stencil_name == "FMA":
-            stencil[blockspergrid, threadsperblock](in_field, in_field2, in_field3, out_field, num_halo)
-        elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-            stencil[blockspergrid, threadsperblock](in_field, tmp_field, out_field, num_halo)
-        else:  # Test        
-            stencil[blockspergrid, threadsperblock](in_field,out_field)
+        if numba_cudadevice:
+            if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
+                stencil[blockspergrid, threadsperblock](in_field_d, out_field_d, num_halo)
+            elif stencil_name == "FMA":
+                stencil[blockspergrid, threadsperblock](in_field_d, in_field2_d, in_field3_d, out_field_d, num_halo)
+            elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
+                stencil[blockspergrid, threadsperblock](in_field_d, in_field2_d, out_field_d, num_halo)
+            else:  # Test        
+                stencil[blockspergrid, threadsperblock](in_field_d,out_field_d)
+                
+        else:   
+            if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
+                stencil[blockspergrid, threadsperblock](in_field, out_field, num_halo)
+            elif stencil_name == "FMA":
+                stencil[blockspergrid, threadsperblock](in_field, in_field2, in_field3, out_field, num_halo)
+            elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
+                stencil[blockspergrid, threadsperblock](in_field, tmp_field, out_field, num_halo)
+            else:  # Test        
+                stencil[blockspergrid, threadsperblock](in_field,out_field)
 
     else:  # gt4py
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d", "test_gt4py"):
@@ -329,7 +334,6 @@ def main(
             "numba_vector_decorator",
             "numba_loop",
             "numba_stencil",
-            "cupy",
         ):  # changed
             if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
                 tic = time.time()
@@ -353,22 +357,41 @@ def main(
                 toc = time.time()
         
         elif backend =="numba_cuda":
-            if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-                tic = time.time()
-                stencil[blockspergrid, threadsperblock](in_field, out_field, num_halo)
-                toc = time.time()
-            elif stencil_name == "FMA":
-                tic = time.time()
-                stencil[blockspergrid, threadsperblock](in_field, in_field2, in_field3, out_field, num_halo)
-                toc = time.time()
-            elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                tic = time.time()
-                stencil[blockspergrid, threadsperblock](in_field, tmp_field, out_field, num_halo)
-                toc = time.time()
-            else:  # Test        
-                tic = time.time()
-                stencil[blockspergrid, threadsperblock](in_field,out_field)
-                toc = time.time()
+            if numba_cudadevice:
+                if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
+                    tic = time.time()
+                    stencil[blockspergrid, threadsperblock](in_field_d, out_field_d, num_halo)
+                    toc = time.time()
+                elif stencil_name == "FMA":
+                    tic = time.time()
+                    stencil[blockspergrid, threadsperblock](in_field_d, in_field2_d, in_field3_d, out_field_d, num_halo)
+                    toc = time.time()
+                elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
+                    tic = time.time()
+                    stencil[blockspergrid, threadsperblock](in_field_d, in_field2_d, out_field_d, num_halo)
+                    toc = time.time()
+                else:  # Test        
+                    tic = time.time()
+                    stencil[blockspergrid, threadsperblock](in_field_d,out_field_d)
+                    toc = time.time()
+            
+            else:
+                if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
+                    tic = time.time()
+                    stencil[blockspergrid, threadsperblock](in_field, out_field, num_halo)
+                    toc = time.time()
+                elif stencil_name == "FMA":
+                    tic = time.time()
+                    stencil[blockspergrid, threadsperblock](in_field, in_field2, in_field3, out_field, num_halo)
+                    toc = time.time()
+                elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
+                    tic = time.time()
+                    stencil[blockspergrid, threadsperblock](in_field, tmp_field, out_field, num_halo)
+                    toc = time.time()
+                else:  # Test        
+                    tic = time.time()
+                    stencil[blockspergrid, threadsperblock](in_field,out_field)
+                    toc = time.time()
 
         else:  # gt4py  #changed here
             if stencil_name in (
@@ -402,7 +425,11 @@ def main(
                 # else: test
         time_list.append(toc - tic)
         if i < num_iter - 1: #swap fields
-            in_field, out_field = out_field, in_field
+            if numba_cudadevice:
+                in_field_d, out_field_d = out_field_d, in_field_d
+            
+            else:
+                in_field, out_field = out_field, in_field
 
     time_avg = np.average(time_list[1:])
     time_stdev = np.std(time_list[1:])
@@ -438,6 +465,7 @@ def main(
         stencil_name,
         backend,
         numba_parallel,
+        numba_cudadevice,
         gt4py_backend,
         nx,
         ny,
