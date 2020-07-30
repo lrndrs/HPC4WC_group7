@@ -207,7 +207,7 @@ def main(
     tmp_field = np.ones_like(in_field)
     out_field = np.ones_like(in_field)
     
-    #print('new in_field:',in_field) #for debug
+    print('new in_field:',in_field) #for debug
     #print('new out_field:',out_field) #for debug
     
     # create threads for numba_cuda:
@@ -313,7 +313,7 @@ def main(
             elif stencil_name == "FMA":
                 stencil[blockspergrid, threadsperblock](in_field_d, in_field2_d, in_field3_d, out_field_d, num_halo)
             elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                stencil[blockspergrid, threadsperblock](in_field_d, in_field2_d, out_field_d, num_halo)
+                stencil(in_field_d, in_field2_d, out_field_d, num_halo,blockspergrid, threadsperblock)
             else:  # Test        
                 stencil[blockspergrid, threadsperblock](in_field_d,out_field_d)
         else:    
@@ -322,7 +322,7 @@ def main(
             elif stencil_name == "FMA":
                 stencil[blockspergrid, threadsperblock](in_field, in_field2, in_field3, out_field, num_halo)
             elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                stencil[blockspergrid, threadsperblock](in_field, in_field2, out_field, num_halo)
+                stencil(in_field, in_field2, out_field, num_halo,blockspergrid, threadsperblock)
             else:  # Test        
                 stencil[blockspergrid, threadsperblock](in_field,out_field)
     
@@ -346,7 +346,7 @@ def main(
             )
     #     #else: test
     
-    #print('Stencil Outfield',out_field) #for debug
+    
     
     # delete halo from out_field #removed 
     #out_field = remove_halo_points(out_field, num_halo)
@@ -355,6 +355,8 @@ def main(
     # Save or validate Outfield
     if numba_cudadevice:
         out_field = out_field_d.copy_to_host()
+    
+    print('Stencil Outfield',out_field) #for debug
     
     if create_field == True:
         field_validation.save_new_outfield(out_field, field_name)

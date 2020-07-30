@@ -289,7 +289,7 @@ def main(
             elif stencil_name == "FMA":
                 stencil[blockspergrid, threadsperblock](in_field_d, in_field2_d, in_field3_d, out_field_d, num_halo)
             elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                stencil[blockspergrid, threadsperblock](in_field_d, in_field2_d, out_field_d, num_halo)
+                stencil(in_field_d, in_field2_d, out_field_d, num_halo,blockspergrid, threadsperblock)
             else:  # Test        
                 stencil[blockspergrid, threadsperblock](in_field_d,out_field_d)
                 
@@ -299,7 +299,7 @@ def main(
             elif stencil_name == "FMA":
                 stencil[blockspergrid, threadsperblock](in_field, in_field2, in_field3, out_field, num_halo)
             elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                stencil[blockspergrid, threadsperblock](in_field, tmp_field, out_field, num_halo)
+                stencil(in_field, in_field2, out_field, num_halo,blockspergrid, threadsperblock)
             else:  # Test        
                 stencil[blockspergrid, threadsperblock](in_field,out_field)
 
@@ -373,7 +373,7 @@ def main(
                     toc = time.time()
                 elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
                     tic = time.time()
-                    stencil[blockspergrid, threadsperblock](in_field_d, in_field2_d, out_field_d, num_halo)
+                    stencil(in_field_d, in_field2_d, out_field_d, num_halo,blockspergrid, threadsperblock)
                     toc = time.time()
                 else:  # Test        
                     tic = time.time()
@@ -391,7 +391,7 @@ def main(
                     toc = time.time()
                 elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
                     tic = time.time()
-                    stencil[blockspergrid, threadsperblock](in_field, tmp_field, out_field, num_halo)
+                    stencil(in_field, in_field2, out_field, num_halo,blockspergrid, threadsperblock)
                     toc = time.time()
                 else:  # Test        
                     tic = time.time()

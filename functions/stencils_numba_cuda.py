@@ -153,10 +153,10 @@ def FMA(in_field, in_field2, in_field3, out_field, num_halo=0):
                 )
 
 
-@cuda.jit
-def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
+#@cuda.jit
+def lapoflap1d(in_field, tmp_field, out_field, num_halo, blockspergrid, threadsperblock):
     """
-    Compute Laplacian in i-direction using 2nd-order centered differences with an explicit nested loop in numba.
+    Compute Laplacian in i-direction using 2nd-order centered differences with an explicit nested loop in numba.     To ensure synchronization with GPU Threads this is implemented by calling the laplacian function twice.
     
     Parameters
     ----------
@@ -170,32 +170,15 @@ def lapoflap1d(in_field, tmp_field, out_field, num_halo=2):
     out_field  : Laplacian-of-Laplacian of the input field computed in i-direction.
     
     """
-
-    i, j, k = cuda.grid(3)
-    if i>=num_halo-1 and j>=num_halo-1 and k>=num_halo-1 and i < in_field.shape[0]-(num_halo-1) and j < in_field.shape[1]-(num_halo-1) and k < in_field.shape[2]-(num_halo-1):
-
-                tmp_field[i, j, k] = (
-                    -2.0 * in_field[i, j, k]
-                    + in_field[i - 1, j, k]
-                    + in_field[i + 1, j, k]
-                )
-
-    # Wait until all threads finish preloading
-    cuda.syncthreads()
+    laplacian1d[blockspergrid, threadsperblock](in_field, tmp_field, num_halo-1)
+    laplacian1d[blockspergrid, threadsperblock](tmp_field, out_field, num_halo)
     
-    if i>=num_halo and j>=num_halo and k>=num_halo and i < in_field.shape[0]-(num_halo) and j < in_field.shape[1]-(num_halo) and k < in_field.shape[2]-(num_halo):
-
-                out_field[i, j, k] = (
-                    -2.0 * tmp_field[i, j, k]
-                    + tmp_field[i - 1, j, k]
-                    + tmp_field[i + 1, j, k]
-                )
 
 
-@cuda.jit
-def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
+#@cuda.jit
+def lapoflap2d(in_field, tmp_field, out_field, num_halo,blockspergrid, threadsperblock):
     """
-    Compute Laplacian of the Laplacian in i and j-direction using 2nd-order centered differences with an explicit nested loop in numba.
+    Compute Laplacian of the Laplacian in i and j-direction using 2nd-order centered differences with an explicit     nested loop in numba. To ensure synchronization with GPU Threads this is implemented by calling the laplacian     function twice.
     
     Parameters
     ----------
@@ -209,34 +192,17 @@ def lapoflap2d(in_field, tmp_field, out_field, num_halo=2):
     out_field  : Laplacian-of-Laplacian of the input field computed in i- and j-direction (horizontally).
     
     """
-
-    i, j, k = cuda.grid(3)
-    if i>=num_halo-1 and j>=num_halo-1 and k>=num_halo-1 and i < in_field.shape[0]-(num_halo-1) and j < in_field.shape[1]-(num_halo-1) and k < in_field.shape[2]-(num_halo-1):
-                tmp_field[i, j, k] = (
-                    -4.0 * in_field[i, j, k]
-                    + in_field[i - 1, j, k]
-                    + in_field[i + 1, j, k]
-                    + in_field[i, j - 1, k]
-                    + in_field[i, j + 1, k]
-                )
-
-    cuda.syncthreads()
     
-    if i>=num_halo and j>=num_halo and k>=num_halo and i < in_field.shape[0]-(num_halo) and j < in_field.shape[1]-(num_halo) and k < in_field.shape[2]-(num_halo):
-                out_field[i, j, k] = (
-                    -4.0 * tmp_field[i, j, k]
-                    + tmp_field[i - 1, j, k]
-                    + tmp_field[i + 1, j, k]
-                    + tmp_field[i, j - 1, k]
-                    + tmp_field[i, j + 1, k]
-                )
+    laplacian2d[blockspergrid, threadsperblock](in_field, tmp_field, num_halo-1)
+    laplacian2d[blockspergrid, threadsperblock](tmp_field, out_field, num_halo)
+    
 
     
 
-@cuda.jit
-def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
+#@cuda.jit
+def lapoflap3d(in_field, tmp_field, out_field, num_halo,blockspergrid, threadsperblock):
     """
-    Compute Laplacian of the Laplacian in i,j,k-direction using 2nd-order centered differences with an explicit nested loop in numba.
+    Compute Laplacian of the Laplacian in i,j,k-direction using 2nd-order centered differences with an explicit    nested loop in numba. To ensure synchronization with GPU Threads this is implemented by calling the laplacian     function twice.
     
     Parameters
     ----------
@@ -250,28 +216,6 @@ def lapoflap3d(in_field, tmp_field, out_field, num_halo=2):
     out_field  : Laplacian-of-Laplacian of the input field computed in i-, j- and k- direction.
     """
     
-    i, j, k = cuda.grid(3)
-    if i>=num_halo-1 and j>=num_halo-1 and k>=num_halo-1 and i < in_field.shape[0]-(num_halo-1) and j < in_field.shape[1]-(num_halo-1) and k < in_field.shape[2]-(num_halo-1):
-                tmp_field[i, j, k] = (
-                    -6.0 * in_field[i, j, k]
-                    + in_field[i - 1, j, k]
-                    + in_field[i + 1, j, k]
-                    + in_field[i, j - 1, k]
-                    + in_field[i, j + 1, k]
-                    + in_field[i, j, k - 1]
-                    + in_field[i, j, k + 1]
-                )
-
-    cuda.syncthreads()
-    
-    if i>=num_halo and j>=num_halo and k>=num_halo and i < in_field.shape[0]-(num_halo) and j < in_field.shape[1]-(num_halo) and k < in_field.shape[2]-(num_halo):
-                out_field[i, j, k] = (
-                    -6.0 * tmp_field[i, j, k]
-                    + tmp_field[i - 1, j, k]
-                    + tmp_field[i + 1, j, k]
-                    + tmp_field[i, j - 1, k]
-                    + tmp_field[i, j + 1, k]
-                    + tmp_field[i, j, k - 1]
-                    + tmp_field[i, j, k + 1]
-                )
+    laplacian3d[blockspergrid, threadsperblock](in_field, tmp_field, num_halo-1)
+    laplacian3d[blockspergrid, threadsperblock](tmp_field, out_field, num_halo)
 
