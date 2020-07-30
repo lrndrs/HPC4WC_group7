@@ -16,6 +16,11 @@ import gt4py
 import gt4py.gtscript as gtscript
 import gt4py.storage as gt_storage
 
+try: 
+    import cupy as cp
+except ImportError:
+        cp=np
+
 
 # matplotlib.use("Agg")
 # import matplotlib.pyplot as plt
@@ -37,6 +42,7 @@ from functions import stencils_numba_stencil
 from functions import stencils_numba_cuda
 from functions import stencils_gt4py
 
+from functions.timing import get_time
 from functions.halo_functions import update_halo, add_halo_points, remove_halo_points
 
 
@@ -221,7 +227,14 @@ def main(
             in_fiel3_d = cuda.to_device(in_field3)
             out_field_d = cuda.to_device(out_field)
     
-
+    # create fields for cupy
+    if backend == "cupy":
+        in_field = cp.array(in_field)
+        tmp_field = cp.array(tmp_field)
+        in_field2 = cp.array(in_field2)
+        in_field3 = cp.array(in_field3)
+        out_field = cp.array(out_field)
+        
     # create fields for gt4py #changed here
     if backend == "gt4py":
         origin = (num_halo, num_halo, num_halo)
@@ -337,8 +350,7 @@ def main(
             "numba_vector_function",
             "numba_vector_decorator",
             "numba_loop",
-            "numba_stencil",
-            "cupy"
+            "numba_stencil"
         ):  # changed
             if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
                 tic = time.time()
@@ -397,7 +409,28 @@ def main(
                     tic = time.time()
                     stencil[blockspergrid, threadsperblock](in_field,out_field)
                     toc = time.time()
-
+        elif backend == "cupy":
+            if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
+                tic = get_time()
+                stencil(in_field, out_field, num_halo=num_halo)  
+                toc = get_time()
+            elif stencil_name == "FMA":
+                tic = get_time()
+                stencil(
+                    in_field, in_field2, in_field3, out_field, num_halo=num_halo
+                )  
+                toc = get_time()
+            elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
+                tic = get_time()
+                stencil(
+                    in_field, tmp_field, out_field, num_halo=2
+                ) 
+                toc = get_time()
+            else:  # Test
+                tic = get_time()
+                stencil(in_field,out_field)
+                toc = get_time()
+            
         else:  # gt4py  #changed here
             if stencil_name in (
                 "laplacian1d",
