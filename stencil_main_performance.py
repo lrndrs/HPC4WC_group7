@@ -330,10 +330,13 @@ def main(
                 origin=origin,
                 domain=(nx, ny, nz),
             )
-        elif stencil_name in ("lapoflap1", "lapoflap2d", "lapoflap3d"):
+        elif stencil_name in ("lapoflap1", "lapoflap2d",):
             stencil(
                 in_field, out_field, origin=origin, domain=(nx, ny, nz),
             )
+        elif stencil_name == "lapoflap3d":
+            stencil(
+                in_field, tmp_field, out_field, origin = origin, domain=(nx, ny, nz))
     #     #else: test
 
     # ----
@@ -454,12 +457,23 @@ def main(
                     domain=(nx, ny, nz),
                 )
                 toc = time.time()
-            elif stencil_name in ("lapoflap1", "lapoflap2d", "lapoflap3d"):
+            elif stencil_name in ("lapoflap1", "lapoflap2d",):
                 tic = time.time()
                 stencil(
                     in_field, out_field, origin=origin, domain=(nx, ny, nz),
                 )
                 toc = time.time()
+            elif stencil_name == "lapoflap3d": #bug fix
+                tic = time.time()
+                stencil(
+                    in_field,
+                    tmp_field,
+                    out_field,
+                    origin = origin,
+                    domain = (nx, ny, nz)
+                )
+                toc = time.time()
+            
                 # else: test
         time_list.append(toc - tic)
         if i < num_iter - 1: #swap fields

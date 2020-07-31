@@ -109,6 +109,7 @@ def lapoflap2d(
 
 def lapoflap3d(
     in_field: gtscript.Field[dtype],
+    tmp_field: gtscript.Field[dtype],
     out_field: gtscript.Field[dtype],
 ):
     with computation(PARALLEL), interval(...):
