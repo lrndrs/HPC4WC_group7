@@ -340,9 +340,13 @@ def main(
                 origin=origin,
                 domain=(nx, ny, nz),
             )
-        elif stencil_name in ("lapoflap1", "lapoflap2d", "lapoflap3d"):
+        elif stencil_name in ("lapoflap1", "lapoflap2d", ):
             stencil(
                 in_field, out_field, origin=origin, domain=(nx, ny, nz),
+            )
+        elif stencil_name == "lapoflap3d":
+            stencil(
+                in_field, tmp_field, out_field, origin = origin, domain = (nx, ny, nz)
             )
     #     #else: test
     
