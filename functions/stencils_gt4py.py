@@ -46,8 +46,9 @@ def laplacian2d(
 def laplacian3d(
     in_field: gtscript.Field[dtype], out_field: gtscript.Field[dtype],
 ):
-    with computation(PARALLEL), interval(...):
-
+    with computation(FORWARD), interval(0,1):
+        out_field = 1
+    with computation(PARALLEL), interval(1,-1):
         out_field[0, 0, 0] = (
             -6.0 * in_field[0, 0, 0]
             + in_field[-1, 0, 0]
@@ -57,7 +58,8 @@ def laplacian3d(
             + in_field[0, 0, -1]
             + in_field[0, 0, 1]
         )
-
+    with computation(PARALLEL), interval(-1,None):
+        out_field = 1
 
 def FMA(
     in_field: gtscript.Field[dtype],
