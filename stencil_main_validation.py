@@ -327,7 +327,7 @@ def main(
                 stencil[blockspergrid, threadsperblock](in_field,out_field)
     
     else:  # gt4py
-        if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d", "test_gt4py"):
+        if stencil_name in ("laplacian1d", "laplacian2d", "test_gt4py"):
             stencil(
                 in_field, out_field, origin=origin, domain=(nx, ny, nz),
             )
@@ -346,7 +346,11 @@ def main(
             )
         elif stencil_name == "lapoflap3d":
             stencil(
-                in_field, tmp_field, out_field, origin = origin, domain = (nx, ny, nz)
+                in_field, tmp_field, out_field, origin = (num_halo, num_halo, num_halo-2), domain = (nx, ny, nz+4) #quick fix for gt4py
+            )
+        elif stencil_name == "laplacian3d":
+            stencil(
+                in_field, out_field, origin = (num_halo, num_halo, num_halo-1), domain = (nx, ny, nz+2) #quick fix for gt4py
             )
     #     #else: test
     
