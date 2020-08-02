@@ -448,12 +448,20 @@ def main(
             if stencil_name in (
                 "laplacian1d",
                 "laplacian2d",
-                "laplacian3d",
                 "test_gt4py",
             ):
                 tic = get_timer()
                 stencil(
                     in_field, out_field, origin=origin, domain=(nx, ny, nz),
+                )
+                toc = get_timer()
+            elif stencil_name == "laplacian3d": #quick fix for gt4py
+                tic = get_timer()
+                stencil(
+                    in_field, 
+                    out_field, 
+                    origin = (num_halo, num_halo, num_halo-1),
+                    domain = (nx, ny, nz+2)
                 )
                 toc = get_timer()
             elif stencil_name == "FMA":
@@ -479,8 +487,8 @@ def main(
                     in_field,
                     tmp_field,
                     out_field,
-                    origin = origin,
-                    domain = (nx, ny, nz)
+                    origin = (num_halo, num_halo, num_halo-2), #quick fix for gt4py
+                    domain = (nx, ny, nz+4) #quick fix for gt4py
                 )
                 toc = get_timer()
             
@@ -492,7 +500,6 @@ def main(
             
             else:
                 in_field, out_field = out_field, in_field
-
     time_avg = np.average(time_list[1:])
     time_stdev = np.std(time_list[1:])
     time_total = sum(time_list[1:])

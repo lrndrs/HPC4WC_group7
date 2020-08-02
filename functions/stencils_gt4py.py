@@ -114,7 +114,7 @@ def lapoflap3d(
     tmp_field: gtscript.Field[dtype],
     out_field: gtscript.Field[dtype],
 ):
-    with computation(PARALLEL), interval(0,1):
+    with computation(FORWARD), interval(0,1):
         tmp_field = 1
     with computation(PARALLEL), interval(-1,None):
         tmp_field = 1
@@ -131,7 +131,7 @@ def lapoflap3d(
         )
 
         
-    with computation(PARALLEL), interval(0,2):
+    with computation(FORWARD), interval(0,2):
         out_field = 1
     with computation(PARALLEL), interval(-2,None):
         out_field = 1

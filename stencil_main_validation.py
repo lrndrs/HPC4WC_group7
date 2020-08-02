@@ -207,7 +207,7 @@ def main(
     tmp_field = np.ones_like(in_field)
     out_field = np.ones_like(in_field)
     
-    print('new in_field:',in_field) #for debug
+    #print('new in_field:',in_field) #for debug
     #print('new out_field:',out_field) #for debug
     
     # create threads for numba_cuda:
@@ -327,7 +327,7 @@ def main(
                 stencil[blockspergrid, threadsperblock](in_field,out_field)
     
     else:  # gt4py
-        if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d", "test_gt4py"):
+        if stencil_name in ("laplacian1d", "laplacian2d", "test_gt4py"):
             stencil(
                 in_field, out_field, origin=origin, domain=(nx, ny, nz),
             )
@@ -346,7 +346,11 @@ def main(
             )
         elif stencil_name == "lapoflap3d":
             stencil(
-                in_field, tmp_field, out_field, origin = origin, domain = (nx, ny, nz)
+                in_field, tmp_field, out_field, origin = (num_halo, num_halo, num_halo-2), domain = (nx, ny, nz+4) #quick fix for gt4py
+            )
+        elif stencil_name == "laplacian3d":
+            stencil(
+                in_field, out_field, origin = (num_halo, num_halo, num_halo-1), domain = (nx, ny, nz+2) #quick fix for gt4py
             )
     #     #else: test
     
@@ -360,7 +364,7 @@ def main(
     if numba_cudadevice:
         out_field = out_field_d.copy_to_host()
     
-    print('Stencil Outfield',out_field) #for debug
+    #print('Stencil Outfield',out_field) #for debug
     
     if create_field == True:
         field_validation.save_new_outfield(out_field, field_name)
