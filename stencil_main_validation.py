@@ -207,7 +207,7 @@ def main(
     tmp_field = np.ones_like(in_field)
     out_field = np.ones_like(in_field)
     
-    print('new in_field:',in_field) #for debug
+    #print('new in_field:',in_field) #for debug
     #print('new out_field:',out_field) #for debug
     
     # create threads for numba_cuda:
@@ -360,7 +360,7 @@ def main(
     if numba_cudadevice:
         out_field = out_field_d.copy_to_host()
     
-    print('Stencil Outfield',out_field) #for debug
+    #print('Stencil Outfield',out_field) #for debug
     
     if create_field == True:
         field_validation.save_new_outfield(out_field, field_name)
