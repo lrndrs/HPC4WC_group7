@@ -102,6 +102,9 @@ from functions.halo_functions import update_halo, add_halo_points, remove_halo_p
     default="numpy",
     help="GT4Py backend. Options are: numpy, gtx86, gtmc, gtcuda.",
 )
+
+
+
 def main(
     nx,
     ny,
@@ -183,8 +186,15 @@ def main(
         )
         sys.exit(0)
 
+    #Timer synchronisation for cupy
+    def get_timer():
+        try:
+            cp.cuda.Device().synchronize()
+        except AttributeError:
+            pass
 
-
+        return time.time()
+    
     # Create random infield
     in_field = np.random.rand(nx, ny, nz)
     
@@ -356,62 +366,62 @@ def main(
             "numba_stencil"
         ):  # changed
             if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-                tic = time.time()
+                tic = get_timer()
                 stencil(in_field, out_field, num_halo=num_halo)  # changed
-                toc = time.time()
+                toc = get_timer()
             elif stencil_name == "FMA":
-                tic = time.time()
+                tic = get_timer()
                 stencil(
                     in_field, in_field2, in_field3, out_field, num_halo=num_halo
                 )  # changed
-                toc = time.time()
+                toc = get_timer()
             elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                tic = time.time()
+                tic = get_timer()
                 stencil(
                     in_field, tmp_field, out_field, num_halo=2
                 )  # changed
-                toc = time.time()
+                toc = get_timer()
             else:  # Test
-                tic = time.time()
+                tic = get_timer()
                 stencil(in_field,out_field)
-                toc = time.time()
+                toc = get_timer()
         
         elif backend =="numba_cuda":
             if numba_cudadevice:
                 if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-                    tic = time.time()
+                    tic = get_timer()
                     stencil[blockspergrid, threadsperblock](in_field_d, out_field_d, num_halo)
-                    toc = time.time()
+                    toc = get_timer()
                 elif stencil_name == "FMA":
-                    tic = time.time()
+                    tic = get_timer()
                     stencil[blockspergrid, threadsperblock](in_field_d, in_field2_d, in_field3_d, out_field_d, num_halo)
-                    toc = time.time()
+                    toc = get_timer()
                 elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                    tic = time.time()
+                    tic = get_timer()
                     stencil(in_field_d, in_field2_d, out_field_d, num_halo,blockspergrid, threadsperblock)
-                    toc = time.time()
+                    toc = get_timer()
                 else:  # Test        
-                    tic = time.time()
+                    tic = get_timer()
                     stencil[blockspergrid, threadsperblock](in_field_d,out_field_d)
-                    toc = time.time()
+                    toc = get_timer()
             
             else:
                 if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-                    tic = time.time()
+                    tic = get_timer()
                     stencil[blockspergrid, threadsperblock](in_field, out_field, num_halo)
-                    toc = time.time()
+                    toc = get_timer()
                 elif stencil_name == "FMA":
-                    tic = time.time()
+                    tic = get_timer()
                     stencil[blockspergrid, threadsperblock](in_field, in_field2, in_field3, out_field, num_halo)
-                    toc = time.time()
+                    toc = get_timer()
                 elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                    tic = time.time()
+                    tic = get_timer()
                     stencil(in_field, in_field2, out_field, num_halo,blockspergrid, threadsperblock)
-                    toc = time.time()
+                    toc = get_timer()
                 else:  # Test        
-                    tic = time.time()
+                    tic = get_timer()
                     stencil[blockspergrid, threadsperblock](in_field,out_field)
-                    toc = time.time()
+                    toc = get_timer()
         elif backend == "cupy":
             if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
                 tic = get_time()
@@ -441,13 +451,13 @@ def main(
                 "laplacian3d",
                 "test_gt4py",
             ):
-                tic = time.time()
+                tic = get_timer()
                 stencil(
                     in_field, out_field, origin=origin, domain=(nx, ny, nz),
                 )
-                toc = time.time()
+                toc = get_timer()
             elif stencil_name == "FMA":
-                tic = time.time()
+                tic = get_timer()
                 stencil(
                     in_field,
                     in_field2,
@@ -456,15 +466,15 @@ def main(
                     origin=origin,
                     domain=(nx, ny, nz),
                 )
-                toc = time.time()
+                toc = get_timer()
             elif stencil_name in ("lapoflap1", "lapoflap2d",):
-                tic = time.time()
+                tic = get_timer()
                 stencil(
                     in_field, out_field, origin=origin, domain=(nx, ny, nz),
                 )
-                toc = time.time()
+                toc = get_timer()
             elif stencil_name == "lapoflap3d": #bug fix
-                tic = time.time()
+                tic = get_timer()
                 stencil(
                     in_field,
                     tmp_field,
@@ -472,7 +482,7 @@ def main(
                     origin = origin,
                     domain = (nx, ny, nz)
                 )
-                toc = time.time()
+                toc = get_timer()
             
                 # else: test
         time_list.append(toc - tic)
