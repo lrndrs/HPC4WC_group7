@@ -147,7 +147,7 @@ def main(
         "numpy", 
         "gtx86", 
         "gtmc", 
-        "gtcuda"
+        "gtcuda",
         "cupy"
     ]
     if gt4py_backend not in gt4py_backend_list:
@@ -165,7 +165,6 @@ def main(
             )
         )
         sys.exit(0)
-
 
     # create field for validation
     if create_field == True:
@@ -340,7 +339,7 @@ def main(
                 origin=origin,
                 domain=(nx, ny, nz),
             )
-        elif stencil_name in ("lapoflap1", "lapoflap2d", ):
+        elif stencil_name in ("lapoflap1d", "lapoflap2d", ):
             stencil(
                 in_field, out_field, origin=origin, domain=(nx, ny, nz),
             )
@@ -359,10 +358,19 @@ def main(
     # delete halo from out_field #removed 
     #out_field = remove_halo_points(out_field, num_halo)
     
-    
+
     # Save or validate Outfield
     if numba_cudadevice:
         out_field = out_field_d.copy_to_host()
+    if backend == "gt4py" and gt4py_backend == "gtcuda":
+        # print("type out_field", type(out_field)) #for debug
+        out_field.synchronize()
+        # print("type out_field", type(out_field)) #for debug
+
+    if backend == "gt4py":
+        out_field = np.asarray(out_field)
+        # print("type out_field", type(out_field)) #for debug
+
     
     #print('Stencil Outfield',out_field) #for debug
     
