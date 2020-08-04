@@ -26,6 +26,11 @@ python3 stencil_main_validation.py --nx 32 --ny 32 --nz 32 --stencil_name lapofl
 - run stencil_main_performance:
 python3 stencil_main_performance.py --nx 32 --ny 32 --nz 32 --stencil_name lapoflap3d --backend numba_loop --num_iter 20
 
+#### Bandwidth
+- run main_bandwidth:
+python3 main_bandwidth.py --nx 32 --ny 32 --nz 32 --backend gt4py --num_iter 20
+
+
 #### Help
 For help about available options type: 
 python3 stencil_main_{}.py --help

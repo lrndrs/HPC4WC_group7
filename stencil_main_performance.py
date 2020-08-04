@@ -475,7 +475,7 @@ def main(
                     domain=(nx, ny, nz),
                 )
                 toc = get_timer()
-            elif stencil_name in ("lapoflap1", "lapoflap2d",):
+            elif stencil_name in ("lapoflap1d", "lapoflap2d",):
                 tic = get_timer()
                 stencil(
                     in_field, out_field, origin=origin, domain=(nx, ny, nz),

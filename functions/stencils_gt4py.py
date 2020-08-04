@@ -77,12 +77,12 @@ def lapoflap1d(
     out_field: gtscript.Field[dtype],
 ):
     with computation(PARALLEL), interval(...):
-        tmp_field[0, 0, 0] = (
-            -2.0 * in_field[0, 0, 0] + in_field[-1, 0, 0] + infield[1, 0, 0]
+        tmp_field= (
+            -2.0 * in_field[0, 0, 0] + in_field[-1, 0, 0] + in_field[1, 0, 0]
         )
 
         out_field[0, 0, 0] = (
-            -2.0 * tmp_field[0, 0, 0] + in_field_[-1, 0, 0] + in_field[1, 0, 0]
+            -2.0 * tmp_field[0, 0, 0] + tmp_field[-1, 0, 0] + tmp_field[1, 0, 0]
         )
 
 
@@ -92,7 +92,7 @@ def lapoflap2d(
 ):
     with computation(PARALLEL), interval(...):
 
-        tmp_field[0, 0, 0] = (
+        tmp_field = (
             -4.0 * in_field[0, 0, 0]
             + in_field[-1, 0, 0]
             + in_field[1, 0, 0]
