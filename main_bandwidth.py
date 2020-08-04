@@ -94,10 +94,15 @@ def main(
 
     # Create random infield
     in_field = np.random.rand(nx, ny, nz)
+    #in_field_h = np.empty_like(in_field)
+    #in_field_d = np.empty_like(in_field)
 
+    
+    
         # ----
     # time the data transefer
     time_list = []
+    time_list2 = []
     for i in range(num_iter):
         # create threads for numba_cuda:
         if backend == "numba_cuda":
@@ -109,34 +114,88 @@ def main(
             blockspergrid = (blockspergrid_x, blockspergrid_y, blockspergrid_z)
 
             #numba_cudadevice:
-            tic = time.time()
+            #in_field_d = cuda.device_array(shape=in_field.shape, dtype=in_field.dtype)
+            tic = get_time()
             in_field_d = cuda.to_device(in_field)
-            toc = time.time()  
+            toc = get_time() 
+            
+            in_field_h = np.empty(shape=in_field.shape, dtype=in_field.dtype)#allocate memory on host
+            tic2=get_time()
+            in_field_h = in_field_d.copy_to_host()
+            toc2=get_time()
 
         # create fields for cupy
         if backend == "cupy":
             tic = get_time()
-            in_field = cp.array(in_field)
+            in_field_d = cp.array(in_field)
             toc = get_time()                             
 
-
+            in_field_h = np.empty(shape=in_field.shape, dtype=in_field.dtype)#allocate memory on host, slight speedup
+            tic2=get_time()
+            in_field_h = cp.asnumpy(in_field_d)#in_field_d.get()#
+            toc2=get_time()
+            
         # create fields for gt4py 
         if backend == "gt4py":
-            in_field_gt = gt4py.storage.from_array(
+            in_field_d = gt4py.storage.from_array(
                 in_field, backend="gtcuda", default_origin=(0,0,0))
-            tic=time.time()
-            in_field_gt.synchronize()
-            toc=time.time()
-        
+            in_field_d.synchronize()
+            tic=get_time()
+            in_field_d.host_to_device(force=True)
+            in_field_d.synchronize()
+            toc=get_time()
+            
+            in_field_d.synchronize()
+            tic2=get_time()
+            in_field_d.device_to_host(force=True)
+            in_field_d.synchronize()
+            toc2=get_time()
+            
+        time_cpu_to_gpu = toc -tic
+        time_gpu_to_cpu = toc2 - tic2
+#         serialization.add_data_bandwidth_single(
+#             df_name+"_cpu_to_gpu",
+#             backend,
+#             nx,
+#             ny,
+#             nz,
+#             num_iter,
+#             number_of_gbytes,
+#             peak_bandwidth_in_gbs,
+#             time_cpu_to_gpu
+#         )
+#         serialization.add_data_bandwidth_single(
+#             df_name+"_gpu_to_cpu",
+#             backend,
+#             nx,
+#             ny,
+#             nz,
+#             num_iter,
+#             number_of_gbytes,
+#             peak_bandwidth_in_gbs,
+#             time_gpu_to_cpu
+#         )
+
         time_list.append(toc - tic)
+        time_list2.append(toc2 - tic2)
 
-    time_avg = np.average(time_list[:])
-    time_stdev = np.std(time_list[:])
-    time_total = sum(time_list[:])
+    time_avg_cpu_to_gpu = np.average(time_list[:])
+    time_stdev_cpu_to_gpu = np.std(time_list[:])
+    time_total_cpu_to_gpu = sum(time_list[:])
 
+    time_avg_gpu_to_cpu = np.average(time_list2[:])
+    time_stdev_gpu_to_cpu = np.std(time_list2[:])
+    time_total_gpu_to_cpu = sum(time_list2[:])
+    
     print(
-        "Total worktime: {} s. In {} iteration(s) the average lapsed time for one run is {} +/- {} s".format(
-            time_total, num_iter, time_avg, time_stdev
+        "Total transfertime from CPU to GPU: {} s. In {} iteration(s) the average lapsed time for one transfer is {} +/- {} s".format(
+            time_total_cpu_to_gpu, num_iter, time_avg_cpu_to_gpu, time_stdev_cpu_to_gpu
+        )
+    )
+    
+    print(
+        "Total transfertime from GPU to CPU: {} s. In {} iteration(s) the average lapsed time for one transfer is {} +/- {} s".format(
+            time_total_gpu_to_cpu, num_iter, time_avg_gpu_to_cpu, time_stdev_gpu_to_cpu
         )
     )
     
@@ -145,25 +204,31 @@ def main(
     number_of_bytes = 8 * num_elements
     number_of_gbytes = number_of_bytes / 1024**3
     print("data transferred = {} GB".format(number_of_gbytes))
-
-    # memory bandwidth
-    memory_bandwidth_in_gbs = number_of_gbytes/time_avg
-    memory_bandwidth_stdev = number_of_gbytes/time_stdev
-    print("memory bandwidth = {:8.5f} GB/s".format(memory_bandwidth_in_gbs))
-
+    
     ##theoretical peak memory bandwidth
-    #f_ddr=2133*10**6
-    #channels=4
-    #width=64/8
-    peak_bandwidth_in_gbs = 68.3#f_ddr*channels*width*1.e-9
+    peak_bandwidth_in_gbs = 32
     print("peak memory bandwidth = {} GB/s".format(peak_bandwidth_in_gbs))
 
-    # compute fraction of peak
-    fraction_of_peak_bandwidth = memory_bandwidth_in_gbs/peak_bandwidth_in_gbs
-    fraction_of_peak_bandwidth_stdev= memory_bandwidth_stdev/peak_bandwidth_in_gbs
-    print("%peak = {:8.5f}%".format(fraction_of_peak_bandwidth))
+    # memory bandwidth CPU to GPU
+    memory_bandwidth_in_gbs_cpu_to_gpu = number_of_gbytes/time_avg_cpu_to_gpu
+    memory_bandwidth_stdev_cpu_to_gpu = number_of_gbytes/time_stdev_cpu_to_gpu
+    print("memory bandwidth = {:8.5f} GB/s".format(memory_bandwidth_in_gbs_cpu_to_gpu))
 
+    # memory bandwidth GPU to CPU
+    memory_bandwidth_in_gbs_gpu_to_cpu = number_of_gbytes/time_avg_gpu_to_cpu
+    memory_bandwidth_stdev_gpu_to_cpu = number_of_gbytes/time_stdev_gpu_to_cpu
+    print("memory bandwidth = {:8.5f} GB/s".format(memory_bandwidth_in_gbs_gpu_to_cpu))
 
+    # compute fraction of peak CPU to GPU
+    fraction_of_peak_bandwidth_cpu_to_gpu = memory_bandwidth_in_gbs_cpu_to_gpu/peak_bandwidth_in_gbs
+    fraction_of_peak_bandwidth_stdev_cpu_to_gpu= memory_bandwidth_stdev_cpu_to_gpu/peak_bandwidth_in_gbs
+    print("peak = {:8.5f}".format(fraction_of_peak_bandwidth_cpu_to_gpu))
+
+    # compute fraction of peak GPU to CPU
+    fraction_of_peak_bandwidth_gpu_to_cpu = memory_bandwidth_in_gbs_gpu_to_cpu/peak_bandwidth_in_gbs
+    fraction_of_peak_bandwidth_stdev_gpu_to_cpu= memory_bandwidth_stdev_gpu_to_cpu/peak_bandwidth_in_gbs
+    print("peak = {:8.5f}".format(fraction_of_peak_bandwidth_gpu_to_cpu))
+    
     # Save into df for further processing
     # Save runtimes
     if (save_runtime==True):
@@ -172,21 +237,38 @@ def main(
 
     # Append row with calculated work to df
     serialization.add_data_bandwidth(
-        df_name,
+        df_name+"_cpu_to_gpu",
         backend,
         nx,
         ny,
         nz,
         num_iter,
-        time_total,
-        time_avg,
-        time_stdev,
+        time_total_cpu_to_gpu,
+        time_avg_cpu_to_gpu,
+        time_stdev_cpu_to_gpu,
         number_of_gbytes,
-        memory_bandwidth_in_gbs,
-        memory_bandwidth_stdev,
+        memory_bandwidth_in_gbs_cpu_to_gpu,
+        memory_bandwidth_stdev_cpu_to_gpu,
         peak_bandwidth_in_gbs,
-        fraction_of_peak_bandwidth,
-        fraction_of_peak_bandwidth_stdev
+        fraction_of_peak_bandwidth_cpu_to_gpu,
+        fraction_of_peak_bandwidth_stdev_cpu_to_gpu
+    )
+    serialization.add_data_bandwidth(
+        df_name+"_gpu_to_cpu",
+        backend,
+        nx,
+        ny,
+        nz,
+        num_iter,
+        time_total_gpu_to_cpu,
+        time_avg_gpu_to_cpu,
+        time_stdev_gpu_to_cpu,
+        number_of_gbytes,
+        memory_bandwidth_in_gbs_gpu_to_cpu,
+        memory_bandwidth_stdev_gpu_to_cpu,
+        peak_bandwidth_in_gbs,
+        fraction_of_peak_bandwidth_gpu_to_cpu,
+        fraction_of_peak_bandwidth_stdev_gpu_to_cpu
     )
 
 
