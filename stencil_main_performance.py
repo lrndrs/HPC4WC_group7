@@ -356,7 +356,7 @@ def main(
     num_iter +=1
     for i in range(num_iter):
         
-        update_halo( in_field, num_halo )
+        #update_halo( in_field, num_halo )
 
         if backend in (
             "numpy",
