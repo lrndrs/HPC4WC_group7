@@ -234,7 +234,7 @@ def main(
         if numba_cudadevice:
             in_field_d = cuda.to_device(in_field)
             in_field2_d = cuda.to_device(in_field2)
-            in_fiel3_d = cuda.to_device(in_field3)
+            in_field3_d = cuda.to_device(in_field3)
             out_field_d = cuda.to_device(out_field)
     
     # create fields for cupy
@@ -365,6 +365,7 @@ def main(
             "numba_loop",
             "numba_stencil"
         ):  # changed
+            update_halo( in_field, num_halo )
             if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
                 tic = get_timer()
                 stencil(in_field, out_field, num_halo=num_halo)  # changed
@@ -387,6 +388,7 @@ def main(
                 toc = get_timer()
         
         elif backend =="numba_cuda":
+            #update_halo( in_field, num_halo )
             if numba_cudadevice:
                 if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
                     tic = get_timer()

@@ -94,18 +94,28 @@ def main(
 
     # Create random infield
     in_field = np.random.rand(nx, ny, nz)
-    #in_field_h = np.empty_like(in_field)
-    #in_field_d = np.empty_like(in_field)
-
+    
+    #create field on GPU device and field for copying back to host.
+    if backend== "numba_cuda":
+        in_field_d = cuda.device_array(shape=in_field.shape, dtype=in_field.dtype)
+        in_field_h = np.empty(shape=in_field.shape, dtype=in_field.dtype)
+        
+    if backend == "cupy":
+        in_field_d = cp.empty(shape=in_field.shape, dtype=in_field.dtype)
+        in_field_h = np.empty(shape=in_field.shape, dtype=in_field.dtype)
+        
+    if backend == "gt4py":
+        in_field_d = gt4py.storage.from_array(
+                in_field, backend="gtcuda", default_origin=(0,0,0))
     
     
-        # ----
     # time the data transefer
     time_list = []
     time_list2 = []
     for i in range(num_iter):
-        # create threads for numba_cuda:
+        #create fields for numba_cuda
         if backend == "numba_cuda":
+            # create threads for numba_cuda:
             threadsperblock = (8,8,8)
 
             blockspergrid_x = math.ceil(in_field.shape[0] / threadsperblock[0])
@@ -114,67 +124,38 @@ def main(
             blockspergrid = (blockspergrid_x, blockspergrid_y, blockspergrid_z)
 
             #numba_cudadevice:
-            #in_field_d = cuda.device_array(shape=in_field.shape, dtype=in_field.dtype)
             tic = get_time()
-            in_field_d = cuda.to_device(in_field)
+            cuda.to_device(in_field, to = in_field_d)
             toc = get_time() 
             
-            in_field_h = np.empty(shape=in_field.shape, dtype=in_field.dtype)#allocate memory on host
             tic2=get_time()
-            in_field_h = in_field_d.copy_to_host()
+            in_field_d.copy_to_host(ary = in_field_h)
             toc2=get_time()
 
         # create fields for cupy
         if backend == "cupy":
             tic = get_time()
-            in_field_d = cp.array(in_field)
+            in_field_d.set(arr = in_field)
             toc = get_time()                             
-
-            in_field_h = np.empty(shape=in_field.shape, dtype=in_field.dtype)#allocate memory on host, slight speedup
+            
             tic2=get_time()
-            in_field_h = cp.asnumpy(in_field_d)#in_field_d.get()#
+            in_field_d.get(out = in_field_h)
             toc2=get_time()
             
         # create fields for gt4py 
         if backend == "gt4py":
-            in_field_d = gt4py.storage.from_array(
-                in_field, backend="gtcuda", default_origin=(0,0,0))
             in_field_d.synchronize()
             tic=get_time()
             in_field_d.host_to_device(force=True)
-            in_field_d.synchronize()
             toc=get_time()
             
             in_field_d.synchronize()
             tic2=get_time()
             in_field_d.device_to_host(force=True)
-            in_field_d.synchronize()
             toc2=get_time()
             
         time_cpu_to_gpu = toc -tic
         time_gpu_to_cpu = toc2 - tic2
-#         serialization.add_data_bandwidth_single(
-#             df_name+"_cpu_to_gpu",
-#             backend,
-#             nx,
-#             ny,
-#             nz,
-#             num_iter,
-#             number_of_gbytes,
-#             peak_bandwidth_in_gbs,
-#             time_cpu_to_gpu
-#         )
-#         serialization.add_data_bandwidth_single(
-#             df_name+"_gpu_to_cpu",
-#             backend,
-#             nx,
-#             ny,
-#             nz,
-#             num_iter,
-#             number_of_gbytes,
-#             peak_bandwidth_in_gbs,
-#             time_gpu_to_cpu
-#         )
 
         time_list.append(toc - tic)
         time_list2.append(toc2 - tic2)
@@ -199,13 +180,13 @@ def main(
         )
     )
     
-    #compute size of transferred data
+    # compute size of transferred data
     num_elements = nx * ny * nz
     number_of_bytes = 8 * num_elements
     number_of_gbytes = number_of_bytes / 1024**3
     print("data transferred = {} GB".format(number_of_gbytes))
     
-    ##theoretical peak memory bandwidth
+    # theoretical peak memory bandwidth
     peak_bandwidth_in_gbs = 32
     print("peak memory bandwidth = {} GB/s".format(peak_bandwidth_in_gbs))
 
@@ -270,8 +251,6 @@ def main(
         fraction_of_peak_bandwidth_gpu_to_cpu,
         fraction_of_peak_bandwidth_stdev_gpu_to_cpu
     )
-
-
 
 if __name__ == "__main__":
     main()

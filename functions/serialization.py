@@ -125,7 +125,7 @@ def add_data_bandwidth(
         peak_bandwidth_in_gbs,
         fraction_of_peak_bandwidth,
         fraction_of_peak_bandwidth_stdev
-):
+    ):
     """
     Appends a row with several variables to the DataFrame performance report.
 
