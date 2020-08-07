@@ -11,16 +11,16 @@ https://www.youtube.com/watch?v=x58W9A2lnQc
 - source HPC4WC_venv/bin/activate --> loads the correct environment
 - check again with which python, if it worked
 
-## Run stencil_main.py
+## Run stencil_main_{}.py
 - move to its folder and execute directly in console
-- or use the EvaluationNotebook.ipynb Jupyternotebook
+- or use one of the Jupyternotebooks
 
 #### Validation
 - run stencil_main_validation:
 python3 stencil_main_validation.py --nx 32 --ny 32 --nz 32 --stencil_name lapoflap1d --backend numba_vector_function --create_field True
 
 - Set the option create_field = True (Default) to create a new random field that is saved as a .npy file.
-- Set then the option create_field to False to validate the out fields of different stencils to the original numpy field.
+- Set then the option create_field to False to validate the out fields of different stencils with the original NumPy field.
 
 #### Performance
 - run stencil_main_performance:
