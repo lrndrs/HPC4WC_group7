@@ -34,6 +34,8 @@ python3 main_bandwidth.py --nx 32 --ny 32 --nz 32 --backend gt4py --num_iter 20
 For help about available options type: 
 python3 stencil_main_{}.py --help
 
+#### Project Report
+The project report is saved as pdf in this repository under the name "Project_report_group7_HPC4WC.pdf"
 
 
   
