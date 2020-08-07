@@ -21,18 +21,6 @@ try:
 except ImportError:
         cp=np
 
-
-# matplotlib.use("Agg")
-# import matplotlib.pyplot as plt
-
-
-# from functions import field_validation
-# #     (
-# #     create_new_infield,
-# #     create_val_infield,
-# #     save_new_outfield,
-# #     validate_outfield,
-# # )
 from functions import serialization
 
 from functions import stencils_numpy
@@ -60,14 +48,14 @@ from functions.halo_functions import update_halo, add_halo_points, remove_halo_p
 @click.option(
     "--stencil_name",
     type=str,
-    required=True,  # changed here
+    required=True,  
     help='Specify which stencil to use. Options are ["test", "laplacian1d", "laplacian2d","laplacian3d","FMA","lapoflap1d", "lapoflap2d", "lapoflap3d","test_gt4py"]',
 )
 @click.option(
     "--backend",
     type=str,
     required=True,
-    help='Options are ["numpy", "numba_vector_function", "numba_vector_decorator", numba_loop", "numba_stencil", "numbavectorize", "gt4py"]',
+    help='Options are ["numpy", "numba_vector_function", "numba_vector_decorator", numba_loop", "numba_stencil", "numbavectorize", "gt4py", "cupy"]',
 )
 @click.option(
     "--num_iter", type=int, default=1, help="Number of iterations",
@@ -127,7 +115,7 @@ def main(
         0 < num_iter <= 1024 * 1024
     ), "You have to specify a reasonable value for num_iter"
 
-    stencil_name_list = [  # changed here
+    stencil_name_list = [ 
         "test",
         "laplacian1d",
         "laplacian2d",
@@ -185,15 +173,6 @@ def main(
             )
         )
         sys.exit(0)
-
-    #Timer synchronisation for cupy
-    def get_timer():
-        try:
-            cp.cuda.Device().synchronize()
-        except AttributeError:
-            pass
-
-        return time.time()
     
     # Create random infield
     in_field = np.random.rand(nx, ny, nz)
@@ -201,14 +180,14 @@ def main(
     
     # expand in_field to contain halo points
     # define value of num_halo
-    if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):  # changed here
+    if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):  
         num_halo = 1
     elif stencil_name in (
         "lapoflap1d",
         "lapoflap2d",
         "lapoflap3d",
         "test_gt4py",
-    ):  # changed here
+    ):  
         num_halo = 2
     else:  # FMA and test
         num_halo = 0
@@ -245,7 +224,7 @@ def main(
         in_field3 = cp.array(in_field3)
         out_field = cp.array(out_field)
         
-    # create fields for gt4py #changed here
+    # create fields for gt4py 
     if backend == "gt4py":
         origin = (num_halo, num_halo, num_halo)
 
@@ -297,11 +276,11 @@ def main(
         "cupy",
     ):
         if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-            stencil(in_field, out_field, num_halo)  # changed
+            stencil(in_field, out_field, num_halo)  
         elif stencil_name == "FMA":
             stencil(in_field, in_field2, in_field3, out_field, num_halo) 
         elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-            stencil(in_field, tmp_field, out_field, num_halo)  # changed
+            stencil(in_field, tmp_field, out_field, num_halo)  
         else:  # Test
             stencil(in_field,out_field)
     
@@ -364,66 +343,66 @@ def main(
             "numba_vector_decorator",
             "numba_loop",
             "numba_stencil"
-        ):  # changed
+        ):  
             update_halo( in_field, num_halo )
             if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-                tic = get_timer()
-                stencil(in_field, out_field, num_halo=num_halo)  # changed
-                toc = get_timer()
+                tic = get_time()
+                stencil(in_field, out_field, num_halo=num_halo)  
+                toc = get_time()
             elif stencil_name == "FMA":
-                tic = get_timer()
+                tic = get_time()
                 stencil(
                     in_field, in_field2, in_field3, out_field, num_halo=num_halo
-                )  # changed
-                toc = get_timer()
+                )  
+                toc = get_time()
             elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                tic = get_timer()
+                tic = get_time()
                 stencil(
                     in_field, tmp_field, out_field, num_halo=2
-                )  # changed
-                toc = get_timer()
+                )  
+                toc = get_time()
             else:  # Test
-                tic = get_timer()
+                tic = get_time()
                 stencil(in_field,out_field)
-                toc = get_timer()
+                toc = get_time()
         
         elif backend =="numba_cuda":
             #update_halo( in_field, num_halo )
             if numba_cudadevice:
                 if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-                    tic = get_timer()
+                    tic = get_time()
                     stencil[blockspergrid, threadsperblock](in_field_d, out_field_d, num_halo)
-                    toc = get_timer()
+                    toc = get_time()
                 elif stencil_name == "FMA":
-                    tic = get_timer()
+                    tic = get_time()
                     stencil[blockspergrid, threadsperblock](in_field_d, in_field2_d, in_field3_d, out_field_d, num_halo)
-                    toc = get_timer()
+                    toc = get_time()
                 elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                    tic = get_timer()
+                    tic = get_time()
                     stencil(in_field_d, in_field2_d, out_field_d, num_halo,blockspergrid, threadsperblock)
-                    toc = get_timer()
+                    toc = get_time()
                 else:  # Test        
-                    tic = get_timer()
+                    tic = get_time()
                     stencil[blockspergrid, threadsperblock](in_field_d,out_field_d)
-                    toc = get_timer()
+                    toc = get_time()
             
             else:
                 if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
-                    tic = get_timer()
+                    tic = get_time()
                     stencil[blockspergrid, threadsperblock](in_field, out_field, num_halo)
-                    toc = get_timer()
+                    toc = get_time()
                 elif stencil_name == "FMA":
-                    tic = get_timer()
+                    tic = get_time()
                     stencil[blockspergrid, threadsperblock](in_field, in_field2, in_field3, out_field, num_halo)
-                    toc = get_timer()
+                    toc = get_time()
                 elif stencil_name in ("lapoflap1d", "lapoflap2d", "lapoflap3d"):
-                    tic = get_timer()
+                    tic = get_time()
                     stencil(in_field, in_field2, out_field, num_halo,blockspergrid, threadsperblock)
-                    toc = get_timer()
+                    toc = get_time()
                 else:  # Test        
-                    tic = get_timer()
+                    tic = get_time()
                     stencil[blockspergrid, threadsperblock](in_field,out_field)
-                    toc = get_timer()
+                    toc = get_time()
         elif backend == "cupy":
             if stencil_name in ("laplacian1d", "laplacian2d", "laplacian3d"):
                 tic = get_time()
@@ -446,28 +425,28 @@ def main(
                 stencil(in_field,out_field)
                 toc = get_time()
             
-        else:  # gt4py  #changed here
+        else:  # gt4py  
             if stencil_name in (
                 "laplacian1d",
                 "laplacian2d",
                 "test_gt4py",
             ):
-                tic = get_timer()
+                tic = get_time()
                 stencil(
                     in_field, out_field, origin=origin, domain=(nx, ny, nz),
                 )
-                toc = get_timer()
-            elif stencil_name == "laplacian3d": #quick fix for gt4py
-                tic = get_timer()
+                toc = get_time()
+            elif stencil_name == "laplacian3d": 
+                tic = get_time()
                 stencil(
                     in_field, 
                     out_field, 
                     origin = (num_halo, num_halo, num_halo-1),
                     domain = (nx, ny, nz+2)
                 )
-                toc = get_timer()
+                toc = get_time()
             elif stencil_name == "FMA":
-                tic = get_timer()
+                tic = get_time()
                 stencil(
                     in_field,
                     in_field2,
@@ -476,23 +455,23 @@ def main(
                     origin=origin,
                     domain=(nx, ny, nz),
                 )
-                toc = get_timer()
+                toc = get_time()
             elif stencil_name in ("lapoflap1d", "lapoflap2d",):
-                tic = get_timer()
+                tic = get_time()
                 stencil(
                     in_field, out_field, origin=origin, domain=(nx, ny, nz),
                 )
-                toc = get_timer()
-            elif stencil_name == "lapoflap3d": #bug fix
-                tic = get_timer()
+                toc = get_time()
+            elif stencil_name == "lapoflap3d": 
+                tic = get_time()
                 stencil(
                     in_field,
                     tmp_field,
                     out_field,
-                    origin = (num_halo, num_halo, num_halo-2), #quick fix for gt4py
-                    domain = (nx, ny, nz+4) #quick fix for gt4py
+                    origin = (num_halo, num_halo, num_halo-2), 
+                    domain = (nx, ny, nz+4) 
                 )
-                toc = get_timer()
+                toc = get_time()
             
                 # else: test
         time_list.append(toc - tic)
@@ -502,10 +481,13 @@ def main(
             
             else:
                 in_field, out_field = out_field, in_field
+                
+    #first run is discarded             
     time_avg = np.average(time_list[1:])
     time_stdev = np.std(time_list[1:])
     time_total = sum(time_list[1:])
-
+    num_iter = num_iter -1
+    
     print(
         "Total worktime: {} s. In {} iteration(s) the average lapsed time for one run is {} +/- {} s".format(
             time_total, num_iter, time_avg, time_stdev
